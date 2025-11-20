@@ -1,0 +1,13 @@
+# Clippy configuration for term-test
+msrv = "1.75"
+
+# Lints to allow
+allow-expect-in-tests = true
+allow-unwrap-in-tests = true
+
+# Pedantic lints we want to enforce
+pedantic-lints = [
+    "missing_errors_doc",
+    "missing_panics_doc",
+    "must_use_candidate",
+]

@@ -1,0 +1,54 @@
+version: 2
+
+updates:
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    reviewers:
+      - "raibid-labs/maintainers"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Maintain Rust dependencies
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "rust"
+    reviewers:
+      - "raibid-labs/maintainers"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Group related dependencies together
+    groups:
+      tokio:
+        patterns:
+          - "tokio*"
+      bevy:
+        patterns:
+          - "bevy*"
+      ratatui:
+        patterns:
+          - "ratatui*"
+          - "crossterm"
+      testing:
+        patterns:
+          - "insta"
+          - "expect-test"
+      development-dependencies:
+        dependency-type: "development"

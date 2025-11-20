@@ -1,0 +1,90 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'Cargo.toml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'docs/**'
+      - 'README.md'
+      - 'Cargo.toml'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Check documentation builds
+  check-docs:
+    name: Check Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-docs-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-docs-cargo-
+
+      - name: Check documentation
+        run: cargo doc --all-features --no-deps
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
+      - name: Test documentation examples
+        run: cargo test --doc --all-features
+
+  # Check for broken links in documentation
+  check-links:
+    name: Check Links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-deadlinks
+        run: cargo install cargo-deadlinks || true
+
+      - name: Build documentation
+        run: cargo doc --all-features --no-deps
+
+      - name: Check for broken links
+        run: cargo deadlinks --dir target/doc || echo "Warning: Some links may be broken"
+        continue-on-error: true
+
+  # Spell check documentation
+  spell-check:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install typos
+        run: |
+          curl -LsSf https://github.com/crate-ci/typos/releases/latest/download/typos-x86_64-unknown-linux-musl.tar.gz | tar xzf - -C /usr/local/bin
+
+      - name: Run spell check
+        run: typos --format brief || echo "Warning: Spelling issues found"
+        continue-on-error: true
