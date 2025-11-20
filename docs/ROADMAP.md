@@ -1,5 +1,17 @@
 # term-test Implementation Roadmap
 
+## 🚨 Critical Update (Phase 1 Complete)
+
+**Decision**: Use **termwiz** instead of vt100 for terminal emulation
+
+**Reason**: vt100 crate cannot support Sixel graphics (no DCS callbacks). Research validated termwiz has full Sixel support with proven proof-of-concept.
+
+**Impact**: ✅ Phase 3 risk eliminated. See SIXEL-SUPPORT-VALIDATION.md and docs/sixel-poc.rs
+
+**Status**: Phase 1 ~60% complete. Project structure initialized, CI/CD operational, Sixel support validated.
+
+---
+
 ## Project Vision
 
 Create a Rust library for integration testing of terminal user interface applications, with first-class support for Ratatui, Bevy ECS integration, and graphics protocols like Sixel. **Primary goal: Enable comprehensive testing for the dgx-pixels project.**
@@ -61,14 +73,15 @@ The **Minimum Viable Product** must support the dgx-pixels project's testing nee
    - [ ] Add read/write operations with buffering
    - [ ] **Test on Linux (primary CI platform)**
 
-3. **Terminal Emulation Layer**
-   - [ ] Integrate `vt100` crate
-   - [ ] **Validate vt100 cursor position tracking** (critical for Sixel)
-   - [ ] Implement `ScreenState` wrapper
-   - [ ] Feed PTY output to parser
+3. **Terminal Emulation Layer** ⚠️ UPDATED: Use termwiz instead of vt100
+   - [ ] ~~Integrate `vt100` crate~~ **Use `termwiz` crate instead**
+   - [x] **Validate Sixel support** - COMPLETE: vt100 cannot support Sixel, termwiz proven viable
+   - [ ] Implement `ScreenState` wrapper using termwiz::Terminal
+   - [ ] Feed PTY output to termwiz parser with VTActor callbacks
    - [ ] Expose screen query methods (`contents()`, `cell_at()`)
-   - [ ] **Track cursor position** (for Sixel position verification)
+   - [ ] **Track cursor position via VTActor callbacks** (for Sixel position verification)
    - [ ] Support color and attribute queries
+   - [ ] **Implement DCS hook for Sixel detection** (see docs/sixel-poc.rs)
 
 4. **Basic Test Harness**
    - [ ] Implement `TuiTestHarness` struct
@@ -95,7 +108,9 @@ The **Minimum Viable Product** must support the dgx-pixels project's testing nee
 - Basic examples run successfully
 - **CI/CD runs tests headlessly**
 
-**Estimated Effort**: 2-3 weeks
+**Critical Decision Made**: ✅ Use termwiz instead of vt100 for Sixel support
+
+**Estimated Effort**: 2-3 weeks (unchanged - termwiz integration similar to vt100)
 
 ### Phase 2: Event Simulation & Async Support
 
@@ -157,11 +172,12 @@ The **Minimum Viable Product** must support the dgx-pixels project's testing nee
 **Tasks**:
 
 1. **Sixel Sequence Detection**
-   - [ ] **Research vt100 Sixel support** (validate or find alternative)
-   - [ ] Detect Sixel escape sequences in output
+   - [x] **Research Sixel support** - COMPLETE: termwiz validated with POC
+   - [ ] Implement VTActor trait with DCS callbacks
+   - [ ] Detect Sixel escape sequences via dcs_hook (mode == 'q')
    - [ ] Parse Sixel escape sequences (structure validation)
-   - [ ] Extract Sixel metadata (dimensions, colors)
-   - [ ] **Capture cursor position when Sixel is rendered** (critical!)
+   - [ ] Extract Sixel metadata (dimensions, colors from raster attributes)
+   - [ ] **Capture cursor position when Sixel is rendered** (via VTActor callbacks)
 
 2. **Sixel Position Tracking** (MVP requirement)
    - [ ] Implement `SixelSequence` type with position
@@ -197,9 +213,13 @@ The **Minimum Viable Product** must support the dgx-pixels project's testing nee
 - Can detect Sixel clearing on screen change
 - **Can prevent dgx-pixels Sixel bugs**
 
-**Estimated Effort**: 2-3 weeks
+**Estimated Effort**: 2-3 weeks (reduced from 2-4 weeks due to proven POC)
 
-**Risk**: vt100 may not support Sixel or position tracking. **Mitigation**: Have termwiz as backup, or extend vt100.
+**Risk Assessment**: ✅ MITIGATED
+- **Previous risk**: vt100 Sixel support uncertain (HIGH)
+- **Resolution**: Validated termwiz has full Sixel support with working POC (LOW)
+- **Proof**: docs/sixel-poc.rs demonstrates all required functionality
+- **Integration effort**: 4-6 hours using POC as template
 
 ### Phase 4: Bevy ECS Integration
 
@@ -456,8 +476,9 @@ The **Minimum Viable Product** must support the dgx-pixels project's testing nee
 ```toml
 [dependencies]
 portable-pty = "0.8"
-vt100 = "0.15"          # or termwiz if vt100 insufficient
+termwiz = "0.22"        # ✅ CONFIRMED: Use termwiz for Sixel support
 thiserror = "1.0"
+anyhow = "1.0"
 ```
 
 ### MVP Dependencies
@@ -553,12 +574,12 @@ full = [
 
 ### Critical Risks for MVP
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| **vt100 lacks Sixel position tracking** | High | High | Research in Phase 1, use termwiz if needed |
-| **Bevy headless mode issues** | Medium | High | Prototype early, consult Bevy community |
-| **CI/CD timing issues** | Medium | Medium | Robust timeouts, retry logic |
-| **Cross-platform PTY differences** | Low | Medium | Focus on Linux for MVP |
+| Risk | Probability | Impact | Status | Mitigation |
+|------|-------------|--------|--------|------------|
+| ~~**vt100 lacks Sixel position tracking**~~ | ~~High~~ | ~~High~~ | ✅ RESOLVED | Research complete: Use termwiz with proven POC |
+| **Bevy headless mode issues** | Medium | High | 🔍 ACTIVE | Prototype early, consult Bevy community |
+| **CI/CD timing issues** | Medium | Medium | 🔍 ACTIVE | Robust timeouts, retry logic |
+| **Cross-platform PTY differences** | Low | Medium | 📋 PLANNED | Focus on Linux for MVP |
 
 ## Implementation Priority (Revised)
 
