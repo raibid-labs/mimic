@@ -84,12 +84,15 @@ jobs:
         run: cargo build --verbose
 
       - name: Run library tests
+        timeout-minutes: 5
         run: cargo test --lib --verbose
 
       - name: Run integration tests
+        timeout-minutes: 5
         run: cargo test --test '*' --verbose
 
       - name: Run doc tests
+        timeout-minutes: 5
         run: cargo test --doc --verbose
 
   # Feature flag testing - ensures all feature combinations work
@@ -236,10 +239,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Rust 1.70
+      - name: Setup Rust 1.75 (MSRV)
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.70"
+          toolchain: "1.75"
 
       - name: Cache cargo dependencies
         uses: actions/cache@v4
