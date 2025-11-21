@@ -110,6 +110,7 @@
 #![deny(unsafe_code)]
 
 mod error;
+pub mod events;
 mod harness;
 mod pty;
 mod screen;
@@ -122,6 +123,7 @@ mod bevy;
 
 // Public API exports
 pub use error::{Result, TermTestError};
+pub use events::{KeyCode, KeyEvent, Modifiers};
 pub use harness::TuiTestHarness;
 pub use pty::TestTerminal;
 pub use screen::{ScreenState, SixelRegion};
