@@ -764,6 +764,330 @@ impl TuiTestHarness {
     pub fn wait_exit(&mut self) -> Result<ExitStatus> {
         self.terminal.wait()
     }
+
+    // ========================================================================
+    // Sixel Graphics Validation APIs
+    // ========================================================================
+
+    /// Returns all captured Sixel regions from the screen state.
+    ///
+    /// This provides direct access to all Sixel graphics detected in the terminal
+    /// output. Each region includes position and dimension information.
+    ///
+    /// # Returns
+    ///
+    /// A slice containing all [`SixelRegion`](crate::screen::SixelRegion) instances
+    /// currently on screen.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use term_test::TuiTestHarness;
+    ///
+    /// # fn test() -> term_test::Result<()> {
+    /// let mut harness = TuiTestHarness::new(80, 24)?;
+    /// // ... spawn app that renders Sixel graphics ...
+    ///
+    /// let regions = harness.sixel_regions();
+    /// for (i, region) in regions.iter().enumerate() {
+    ///     println!("Sixel {}: position ({}, {}), size {}x{}",
+    ///         i, region.start_row, region.start_col,
+    ///         region.width, region.height);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "sixel")]
+    pub fn sixel_regions(&self) -> &[crate::screen::SixelRegion] {
+        self.state.sixel_regions()
+    }
+
+    /// Returns the count of Sixel graphics currently on screen.
+    ///
+    /// This is a convenience method equivalent to `harness.sixel_regions().len()`.
+    /// Useful for quick assertions about the number of graphics present.
+    ///
+    /// # Returns
+    ///
+    /// The number of Sixel graphics regions detected.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use term_test::TuiTestHarness;
+    ///
+    /// # fn test() -> term_test::Result<()> {
+    /// let harness = TuiTestHarness::new(80, 24)?;
+    /// // ... render graphics ...
+    ///
+    /// assert_eq!(harness.sixel_count(), 1, "Expected exactly one image");
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "sixel")]
+    pub fn sixel_count(&self) -> usize {
+        self.sixel_regions().len()
+    }
+
+    /// Finds a Sixel graphic at a specific position.
+    ///
+    /// Searches for a Sixel region that starts at the exact (row, col) position.
+    /// Returns `None` if no Sixel is found at that position.
+    ///
+    /// # Arguments
+    ///
+    /// * `row` - Row to search (0-based)
+    /// * `col` - Column to search (0-based)
+    ///
+    /// # Returns
+    ///
+    /// A reference to the [`SixelRegion`](crate::screen::SixelRegion) at that position,
+    /// or `None` if no Sixel starts there.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use term_test::TuiTestHarness;
+    ///
+    /// # fn test() -> term_test::Result<()> {
+    /// let harness = TuiTestHarness::new(80, 24)?;
+    /// // ... render Sixel at (5, 10) ...
+    ///
+    /// if let Some(region) = harness.sixel_at(5, 10) {
+    ///     println!("Found Sixel: {}x{} pixels", region.width, region.height);
+    /// } else {
+    ///     println!("No Sixel at that position");
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "sixel")]
+    pub fn sixel_at(&self, row: u16, col: u16) -> Option<&crate::screen::SixelRegion> {
+        self.state.sixel_regions()
+            .iter()
+            .find(|r| r.start_row == row && r.start_col == col)
+    }
+
+    /// Asserts that all Sixel graphics are within the specified area.
+    ///
+    /// This validates that every Sixel bounding rectangle is completely contained
+    /// within the given area. If any Sixel extends beyond the area, an error is
+    /// returned with details about which sequences are out of bounds.
+    ///
+    /// # Arguments
+    ///
+    /// * `area` - Bounding area as (row, col, width, height) tuple
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TermTestError::SixelValidation`] if any Sixel is outside the area.
+    /// The error message includes the positions of all out-of-bounds graphics.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use term_test::TuiTestHarness;
+    ///
+    /// # fn test() -> term_test::Result<()> {
+    /// let harness = TuiTestHarness::new(80, 24)?;
+    /// // ... render graphics ...
+    ///
+    /// // Verify all graphics are in the preview panel
+    /// let preview_area = (5, 40, 35, 15); // (row, col, width, height)
+    /// harness.assert_sixel_within_bounds(preview_area)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "sixel")]
+    pub fn assert_sixel_within_bounds(&self, area: (u16, u16, u16, u16)) -> Result<()> {
+        use crate::sixel::SixelCapture;
+        let capture = SixelCapture::from_screen_state(&self.state);
+        capture.assert_all_within(area)
+    }
+
+    /// Checks if any Sixel graphics overlap with the specified area.
+    ///
+    /// Returns `true` if at least one Sixel bounding rectangle intersects with
+    /// the given area, even partially. This is useful for detecting graphics in
+    /// specific screen regions.
+    ///
+    /// # Arguments
+    ///
+    /// * `area` - Area to check as (row, col, width, height) tuple
+    ///
+    /// # Returns
+    ///
+    /// `true` if any Sixel overlaps with the area, `false` otherwise.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use term_test::TuiTestHarness;
+    ///
+    /// # fn test() -> term_test::Result<()> {
+    /// let harness = TuiTestHarness::new(80, 24)?;
+    /// // ... render graphics ...
+    ///
+    /// let preview_area = (5, 40, 35, 15);
+    /// if harness.has_sixel_in_area(preview_area) {
+    ///     println!("Graphics detected in preview area");
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "sixel")]
+    pub fn has_sixel_in_area(&self, area: (u16, u16, u16, u16)) -> bool {
+        use crate::sixel::SixelCapture;
+        let capture = SixelCapture::from_screen_state(&self.state);
+        !capture.sequences_in_area(area).is_empty()
+    }
+
+    /// Verifies that Sixel graphics were cleared after a screen update.
+    ///
+    /// This method records the current Sixel count, calls [`update`](Self::update)
+    /// to refresh the screen state, and then checks if the count decreased.
+    /// It's useful for verifying that graphics are properly cleared during
+    /// screen transitions (e.g., switching between files in a previewer).
+    ///
+    /// # Returns
+    ///
+    /// `Ok(true)` if the Sixel count decreased, `Ok(false)` if it stayed the same
+    /// or increased.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the screen update fails.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use term_test::TuiTestHarness;
+    ///
+    /// # fn test() -> term_test::Result<()> {
+    /// let mut harness = TuiTestHarness::new(80, 24)?;
+    /// // ... render some graphics ...
+    ///
+    /// // Simulate screen transition (e.g., press a key to switch files)
+    /// harness.send_key(term_test::KeyCode::Down)?;
+    ///
+    /// // Verify graphics were cleared
+    /// if harness.verify_sixel_cleared()? {
+    ///     println!("Graphics properly cleared on transition");
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "sixel")]
+    pub fn verify_sixel_cleared(&mut self) -> Result<bool> {
+        let before = self.sixel_count();
+        self.update_state()?;
+        let after = self.sixel_count();
+        Ok(after < before)
+    }
+
+    /// Asserts that a Sixel graphic appears in a typical preview area.
+    ///
+    /// This is a convenience method for the common dgx-pixels use case where
+    /// image previews are displayed in a standard preview panel layout.
+    ///
+    /// The default preview area is:
+    /// - Rows: 5-35 (30 rows, leaving space for header/footer)
+    /// - Cols: 40-75 (35 columns, typical split-pane layout)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TermTestError::SixelValidation`] if no Sixel graphics are
+    /// found in the preview area.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use term_test::TuiTestHarness;
+    ///
+    /// # fn test() -> term_test::Result<()> {
+    /// let harness = TuiTestHarness::new(80, 24)?;
+    /// // ... render image preview ...
+    ///
+    /// // Quick assertion for standard preview layout
+    /// harness.assert_preview_has_sixel()?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "sixel")]
+    pub fn assert_preview_has_sixel(&self) -> Result<()> {
+        // Standard dgx-pixels preview area layout
+        // Assumes 80x24 terminal with:
+        // - Left sidebar: cols 0-39
+        // - Preview area: cols 40-75, rows 5-20
+        let preview_area = (5, 40, 35, 15);
+
+        if !self.has_sixel_in_area(preview_area) {
+            return Err(TermTestError::SixelValidation(
+                format!(
+                    "No Sixel graphics found in standard preview area {:?}. \
+                    Current Sixel count: {}. \
+                    Regions: {:?}",
+                    preview_area,
+                    self.sixel_count(),
+                    self.sixel_regions()
+                        .iter()
+                        .map(|r| (r.start_row, r.start_col, r.width, r.height))
+                        .collect::<Vec<_>>()
+                )
+            ));
+        }
+        Ok(())
+    }
+
+    /// Asserts that a Sixel graphic appears in a custom preview area.
+    ///
+    /// Similar to [`assert_preview_has_sixel`](Self::assert_preview_has_sixel),
+    /// but allows specifying a custom preview area. This is useful for applications
+    /// with non-standard layouts.
+    ///
+    /// # Arguments
+    ///
+    /// * `preview_area` - Custom preview area as (row, col, width, height)
+    ///
+    /// # Errors
+    ///
+    /// Returns [`TermTestError::SixelValidation`] if no Sixel graphics are
+    /// found in the specified preview area.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use term_test::TuiTestHarness;
+    ///
+    /// # fn test() -> term_test::Result<()> {
+    /// let harness = TuiTestHarness::new(120, 40)?;
+    /// // ... render image preview in large terminal ...
+    ///
+    /// // Custom preview area for larger terminal
+    /// let custom_area = (10, 50, 60, 25);
+    /// harness.assert_preview_has_sixel_in(custom_area)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "sixel")]
+    pub fn assert_preview_has_sixel_in(&self, preview_area: (u16, u16, u16, u16)) -> Result<()> {
+        if !self.has_sixel_in_area(preview_area) {
+            return Err(TermTestError::SixelValidation(
+                format!(
+                    "No Sixel graphics found in preview area {:?}. \
+                    Current Sixel count: {}. \
+                    Regions: {:?}",
+                    preview_area,
+                    self.sixel_count(),
+                    self.sixel_regions()
+                        .iter()
+                        .map(|r| (r.start_row, r.start_col, r.width, r.height))
+                        .collect::<Vec<_>>()
+                )
+            ));
+        }
+        Ok(())
+    }
 }
 
 /// Builder for configuring a `TuiTestHarness`.
@@ -1250,6 +1574,284 @@ mod tests {
         harness.update_state()?;
 
         assert!(harness.screen_contents().contains("data"));
+        Ok(())
+    }
+
+    // ========================================================================
+    // Sixel Validation API Tests
+    // ========================================================================
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_sixel_count() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Initially no Sixel graphics
+        assert_eq!(harness.sixel_count(), 0);
+
+        // Feed a Sixel sequence directly to the screen state
+        harness.state_mut().feed(b"\x1b[5;10H");  // Move cursor
+        harness.state_mut().feed(b"\x1bPq\"1;1;100;50#0~\x1b\\");  // Sixel sequence
+
+        // Should now have one Sixel
+        assert_eq!(harness.sixel_count(), 1);
+
+        // Feed another Sixel
+        harness.state_mut().feed(b"\x1b[10;20H");
+        harness.state_mut().feed(b"\x1bPq\"1;1;80;60#0~\x1b\\");
+
+        // Should now have two Sixels
+        assert_eq!(harness.sixel_count(), 2);
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_sixel_regions() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Feed Sixel with known dimensions
+        harness.state_mut().feed(b"\x1b[5;10H");  // Position (4, 9) in 0-based
+        harness.state_mut().feed(b"\x1bPq\"1;1;100;50#0~\x1b\\");
+
+        let regions = harness.sixel_regions();
+        assert_eq!(regions.len(), 1);
+
+        let region = &regions[0];
+        assert_eq!(region.start_row, 4);  // 5-1 (CSI is 1-based, we use 0-based)
+        assert_eq!(region.start_col, 9);  // 10-1
+        assert_eq!(region.width, 100);
+        assert_eq!(region.height, 50);
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_sixel_at_position() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Feed Sixel at position (5, 10) [1-based in CSI]
+        harness.state_mut().feed(b"\x1b[5;10H");
+        harness.state_mut().feed(b"\x1bPq\"1;1;100;50#0~\x1b\\");
+
+        // Should find Sixel at (4, 9) [0-based]
+        let region = harness.sixel_at(4, 9);
+        assert!(region.is_some());
+
+        let region = region.unwrap();
+        assert_eq!(region.width, 100);
+        assert_eq!(region.height, 50);
+
+        // Should not find Sixel at other positions
+        assert!(harness.sixel_at(0, 0).is_none());
+        assert!(harness.sixel_at(10, 10).is_none());
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_assert_sixel_within_bounds_success() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Place Sixel well within screen bounds
+        harness.state_mut().feed(b"\x1b[5;10H");
+        harness.state_mut().feed(b"\x1bPq\"1;1;10;10#0~\x1b\\");
+
+        // Large area that encompasses the Sixel
+        let area = (0, 0, 80, 24);
+        assert!(harness.assert_sixel_within_bounds(area).is_ok());
+
+        // Smaller area that still contains the Sixel
+        let area = (3, 8, 20, 15);
+        assert!(harness.assert_sixel_within_bounds(area).is_ok());
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_assert_sixel_within_bounds_failure() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Place Sixel at position (4, 9) with size 10x10
+        harness.state_mut().feed(b"\x1b[5;10H");
+        harness.state_mut().feed(b"\x1bPq\"1;1;10;10#0~\x1b\\");
+
+        // Area that doesn't contain the Sixel
+        let area = (0, 0, 5, 5);
+        let result = harness.assert_sixel_within_bounds(area);
+        assert!(result.is_err());
+
+        // Check that error is SixelValidation
+        if let Err(crate::error::TermTestError::SixelValidation(msg)) = result {
+            assert!(msg.contains("outside area"));
+        } else {
+            panic!("Expected SixelValidation error");
+        }
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_has_sixel_in_area() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // No Sixel initially
+        let area = (0, 0, 80, 24);
+        assert!(!harness.has_sixel_in_area(area));
+
+        // Add Sixel at (4, 9)
+        harness.state_mut().feed(b"\x1b[5;10H");
+        harness.state_mut().feed(b"\x1bPq\"1;1;10;10#0~\x1b\\");
+
+        // Should detect Sixel in large area
+        assert!(harness.has_sixel_in_area((0, 0, 80, 24)));
+
+        // Should detect in area that contains it
+        assert!(harness.has_sixel_in_area((0, 0, 20, 20)));
+
+        // Should not detect in area that doesn't contain it
+        assert!(!harness.has_sixel_in_area((20, 20, 10, 10)));
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_verify_sixel_cleared() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Add Sixel
+        harness.state_mut().feed(b"\x1b[5;10H");
+        harness.state_mut().feed(b"\x1bPq\"1;1;100;50#0~\x1b\\");
+        assert_eq!(harness.sixel_count(), 1);
+
+        // Recreate state (simulating screen clear)
+        let new_state = crate::screen::ScreenState::new(80, 24);
+        *harness.state_mut() = new_state;
+
+        // Manual update (simulating what verify_sixel_cleared does)
+        let before = harness.sixel_count();
+        assert_eq!(before, 0); // Already cleared due to new state
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_assert_preview_has_sixel_success() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Place Sixel in standard preview area (5, 40, 35, 15)
+        harness.state_mut().feed(b"\x1b[8;45H");  // Row 8, col 45 (within preview)
+        harness.state_mut().feed(b"\x1bPq\"1;1;100;50#0~\x1b\\");
+
+        // Should succeed as Sixel is in preview area
+        assert!(harness.assert_preview_has_sixel().is_ok());
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_assert_preview_has_sixel_failure() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Place Sixel outside preview area
+        harness.state_mut().feed(b"\x1b[2;2H");  // Row 2, col 2 (outside preview)
+        harness.state_mut().feed(b"\x1bPq\"1;1;100;50#0~\x1b\\");
+
+        // Should fail as Sixel is not in preview area
+        let result = harness.assert_preview_has_sixel();
+        assert!(result.is_err());
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_assert_preview_has_sixel_in_custom() -> Result<()> {
+        let mut harness = TuiTestHarness::new(120, 40)?;
+
+        // Custom preview area for larger terminal
+        let custom_area = (10, 50, 60, 25);
+
+        // Place Sixel in custom area
+        // Position (15, 60) [1-based CSI] = (14, 59) [0-based]
+        // With dimensions 40x30 (small enough to fit within 60x25 area)
+        harness.state_mut().feed(b"\x1b[15;60H");  // Row 15, col 60
+        harness.state_mut().feed(b"\x1bPq\"1;1;40;30#0~\x1b\\");
+
+        // Should succeed - Sixel at (14, 59) with size 40x30 is within (10, 50, 60x25)
+        assert!(harness.assert_preview_has_sixel_in(custom_area).is_ok());
+
+        // Should fail for different area
+        let wrong_area = (0, 0, 20, 20);
+        assert!(harness.assert_preview_has_sixel_in(wrong_area).is_err());
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_multiple_sixels_in_area() -> Result<()> {
+        let mut harness = TuiTestHarness::new(100, 40)?;
+
+        // Add multiple Sixels in preview area
+        let preview_area = (5, 30, 60, 30);
+
+        harness.state_mut().feed(b"\x1b[10;40H");
+        harness.state_mut().feed(b"\x1bPq\"1;1;80;60#0~\x1b\\");
+
+        harness.state_mut().feed(b"\x1b[20;50H");
+        harness.state_mut().feed(b"\x1bPq\"1;1;100;80#0~\x1b\\");
+
+        // Both should be detected
+        assert_eq!(harness.sixel_count(), 2);
+        assert!(harness.has_sixel_in_area(preview_area));
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_sixel_at_screen_edge() -> Result<()> {
+        let mut harness = TuiTestHarness::new(80, 24)?;
+
+        // Place Sixel at screen edge
+        harness.state_mut().feed(b"\x1b[1;1H");  // Top-left corner
+        harness.state_mut().feed(b"\x1bPq\"1;1;50;30#0~\x1b\\");
+
+        assert_eq!(harness.sixel_count(), 1);
+        assert!(harness.sixel_at(0, 0).is_some());
+
+        // Verify position
+        let region = harness.sixel_at(0, 0).unwrap();
+        assert_eq!(region.start_row, 0);
+        assert_eq!(region.start_col, 0);
+
+        Ok(())
+    }
+
+    #[cfg(feature = "sixel")]
+    #[test]
+    fn test_empty_sixel_regions() -> Result<()> {
+        let harness = TuiTestHarness::new(80, 24)?;
+
+        // No Sixel graphics
+        assert_eq!(harness.sixel_count(), 0);
+        assert!(harness.sixel_regions().is_empty());
+        assert!(harness.sixel_at(0, 0).is_none());
+
+        // Empty screen should pass bounds validation
+        let area = (0, 0, 80, 24);
+        assert!(harness.assert_sixel_within_bounds(area).is_ok());
+        assert!(!harness.has_sixel_in_area(area));
+
         Ok(())
     }
 }

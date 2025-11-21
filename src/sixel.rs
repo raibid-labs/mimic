@@ -58,8 +58,8 @@ use crate::error::{Result, TermTestError};
 /// # Fields
 ///
 /// - `raw`: The raw Sixel escape sequence bytes (including DCS wrapper)
-/// - `position`: Cursor position when the Sixel was rendered (row, col)
-/// - `bounds`: Calculated bounding rectangle (row, col, width, height)
+/// - `position`: Cursor position when the Sixel was rendered (row, col) in terminal cells
+/// - `bounds`: Calculated bounding rectangle (row, col, width, height) in terminal cells
 ///
 /// # Example
 ///
@@ -267,10 +267,27 @@ impl SixelCapture {
         let sequences = screen.sixel_regions()
             .iter()
             .map(|region: &SixelRegion| {
+                // Convert pixel dimensions to terminal cells
+                // Standard Sixel-to-cell conversion: 8 pixels/col, 6 pixels/row
+                const PIXELS_PER_COL: u32 = 8;
+                const PIXELS_PER_ROW: u32 = 6;
+
+                let width_cells = if region.width > 0 {
+                    ((region.width + PIXELS_PER_COL - 1) / PIXELS_PER_COL) as u16
+                } else {
+                    0
+                };
+
+                let height_cells = if region.height > 0 {
+                    ((region.height + PIXELS_PER_ROW - 1) / PIXELS_PER_ROW) as u16
+                } else {
+                    0
+                };
+
                 SixelSequence::new(
                     region.data.clone(),
                     (region.start_row, region.start_col),
-                    (region.start_row, region.start_col, region.width as u16, region.height as u16),
+                    (region.start_row, region.start_col, width_cells, height_cells),
                 )
             })
             .collect();

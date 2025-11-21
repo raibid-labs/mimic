@@ -56,7 +56,21 @@ fn main() -> Result<()> {
     // Example 5: Practical testing scenario
     example_5_practical_scenario()?;
 
+    // Example 6: TuiTestHarness validation APIs (NEW)
+    example_6_harness_validation_apis()?;
+
+    // Example 7: dgx-pixels workflow simulation (NEW)
+    example_7_dgx_pixels_workflow()?;
+
+    // Example 8: Error handling and debugging (NEW)
+    example_8_error_handling()?;
+
     println!("\n=== All Sixel Examples Completed Successfully ===");
+    println!("\nSummary:");
+    println!("  Examples 1-5: Core Sixel detection and validation");
+    println!("  Example 6: TuiTestHarness convenience APIs");
+    println!("  Example 7: dgx-pixels workflow testing");
+    println!("  Example 8: Error handling and debugging");
     Ok(())
 }
 
@@ -283,8 +297,9 @@ fn example_5_practical_scenario() -> Result<()> {
 
     // Test 1: Display image in preview area
     println!("\nTest 1: Display image in preview area");
-    screen.feed(b"\x1b[10;40H");  // Position in preview
-    screen.feed(b"\x1bPq\"1;1;400;300#0~\x1b\\");
+    screen.feed(b"\x1b[10;40H");  // Position in preview (row 10, col 40)
+    // Image: 400x150 pixels = 50x25 cells, should fit in preview (70 wide x 30 tall)
+    screen.feed(b"\x1bPq\"1;1;400;150#0~\x1b\\");
 
     let capture = SixelCapture::from_screen_state(&screen);
     match capture.assert_all_within(preview_area) {
@@ -328,6 +343,209 @@ fn example_5_practical_scenario() -> Result<()> {
     }
 
     println!("\n✓ Practical scenario tests completed");
+    println!();
+    Ok(())
+}
+
+/// Example 6: Using TuiTestHarness Sixel validation APIs
+///
+/// Demonstrates:
+/// - TuiTestHarness convenience methods for Sixel validation
+/// - dgx-pixels workflow testing
+/// - Simplified validation API usage
+fn example_6_harness_validation_apis() -> Result<()> {
+    use term_test::TuiTestHarness;
+
+    println!("--- Example 6: TuiTestHarness Validation APIs ---");
+    println!("Demonstrates the new harness-level Sixel validation methods\n");
+
+    // Create harness (simulating dgx-pixels standard 80x24 terminal)
+    let mut harness = TuiTestHarness::new(80, 24)?;
+    println!("Created 80x24 test harness");
+
+    // Initially no Sixels
+    println!("\nInitial state:");
+    println!("  Sixel count: {}", harness.sixel_count());
+    assert_eq!(harness.sixel_count(), 0);
+
+    // Feed Sixel in preview area
+    println!("\nRendering Sixel in preview area (10, 50)...");
+    harness.state_mut().feed(b"\x1b[10;50H");
+    harness.state_mut().feed(b"\x1bPq\"1;1;200;120#0;2;100;100;100#0~~@@\x1b\\");
+
+    // Use sixel_count()
+    println!("  Sixel count: {}", harness.sixel_count());
+    assert_eq!(harness.sixel_count(), 1);
+    println!("  ✓ Sixel detected");
+
+    // Use sixel_at() to find specific Sixel
+    println!("\nFinding Sixel at position (9, 49) [0-based]:");
+    if let Some(region) = harness.sixel_at(9, 49) {
+        println!("  Found Sixel:");
+        println!("    Position: ({}, {})", region.start_row, region.start_col);
+        println!("    Dimensions: {}x{} pixels", region.width, region.height);
+        println!("  ✓ sixel_at() works correctly");
+    } else {
+        println!("  ✗ Sixel not found!");
+    }
+
+    // Use assert_preview_has_sixel() - dgx-pixels standard layout
+    println!("\nValidating with dgx-pixels standard preview area:");
+    match harness.assert_preview_has_sixel() {
+        Ok(()) => println!("  ✓ Sixel found in standard preview area (5, 40, 35x15)"),
+        Err(e) => println!("  ✗ Validation failed: {}", e),
+    }
+
+    // Use has_sixel_in_area() to check sidebar
+    println!("\nChecking sidebar for graphics:");
+    let sidebar = (0, 0, 40, 24);
+    if harness.has_sixel_in_area(sidebar) {
+        println!("  ✗ WARNING: Graphics detected in sidebar!");
+    } else {
+        println!("  ✓ No graphics in sidebar (correct)");
+    }
+
+    // Use assert_sixel_within_bounds() for custom areas
+    println!("\nValidating bounds:");
+    let full_screen = (0, 0, 80, 24);
+    match harness.assert_sixel_within_bounds(full_screen) {
+        Ok(()) => println!("  ✓ All Sixels within screen bounds"),
+        Err(e) => println!("  ✗ Out of bounds: {}", e),
+    }
+
+    println!("\n✓ Harness validation APIs example completed");
+    println!();
+    Ok(())
+}
+
+/// Example 7: dgx-pixels workflow simulation
+///
+/// Demonstrates:
+/// - Complete dgx-pixels file browsing workflow
+/// - Screen transition verification
+/// - Preview area validation
+fn example_7_dgx_pixels_workflow() -> Result<()> {
+    use term_test::TuiTestHarness;
+
+    println!("--- Example 7: dgx-pixels Workflow Simulation ---");
+    println!("Simulates browsing through images in dgx-pixels\n");
+
+    let mut harness = TuiTestHarness::new(80, 24)?;
+    let preview_area = (5, 40, 35, 15);
+
+    // Step 1: Display first image
+    println!("Step 1: Display first image");
+    harness.state_mut().feed(b"\x1b[10;50H\x1bPq\"1;1;180;100#0~\x1b\\");
+
+    assert_eq!(harness.sixel_count(), 1);
+    assert!(harness.assert_preview_has_sixel().is_ok());
+    println!("  ✓ First image displayed in preview");
+
+    // Step 2: Navigate to next file (simulate screen clear + new image)
+    println!("\nStep 2: Navigate to next image");
+    use term_test::ScreenState;
+    *harness.state_mut() = ScreenState::new(80, 24);
+
+    // New image
+    harness.state_mut().feed(b"\x1b[10;50H\x1bPq\"1;1;220;140#0~\x1b\\");
+
+    assert_eq!(harness.sixel_count(), 1);
+    assert!(harness.assert_preview_has_sixel().is_ok());
+    println!("  ✓ Previous image cleared, new image displayed");
+
+    // Step 3: Verify sidebar remains empty throughout
+    println!("\nStep 3: Verify sidebar integrity");
+    let sidebar = (0, 0, 40, 24);
+    assert!(!harness.has_sixel_in_area(sidebar));
+    println!("  ✓ Sidebar remains graphics-free");
+
+    // Step 4: Test custom preview area for different terminal size
+    println!("\nStep 4: Test larger terminal layout");
+    let mut harness_large = TuiTestHarness::new(120, 40)?;
+    let large_preview = (10, 60, 55, 25);
+
+    harness_large.state_mut().feed(b"\x1b[20;80H\x1bPq\"1;1;400;300#0~\x1b\\");
+
+    match harness_large.assert_preview_has_sixel_in(large_preview) {
+        Ok(()) => println!("  ✓ Large terminal preview validation works"),
+        Err(e) => println!("  ✗ Validation failed: {}", e),
+    }
+
+    println!("\n✓ dgx-pixels workflow simulation completed");
+    println!();
+    Ok(())
+}
+
+/// Example 8: Error handling and debugging
+///
+/// Demonstrates:
+/// - Helpful error messages
+/// - Debugging Sixel position issues
+/// - Validation failure scenarios
+fn example_8_error_handling() -> Result<()> {
+    use term_test::TuiTestHarness;
+
+    println!("--- Example 8: Error Handling and Debugging ---");
+    println!("Demonstrates validation failures with helpful error messages\n");
+
+    let mut harness = TuiTestHarness::new(80, 24)?;
+
+    // Scenario 1: No Sixel in preview area
+    println!("Scenario 1: No Sixel graphics present");
+    match harness.assert_preview_has_sixel() {
+        Ok(()) => println!("  Unexpected success"),
+        Err(e) => {
+            println!("  Expected error occurred:");
+            println!("  {}", e);
+            println!("  ✓ Error message provides helpful debugging info");
+        }
+    }
+
+    // Scenario 2: Sixel outside expected area
+    println!("\nScenario 2: Sixel outside preview area");
+    harness.state_mut().feed(b"\x1b[2;5H\x1bPq\"1;1;100;80#0~\x1b\\");
+
+    match harness.assert_preview_has_sixel() {
+        Ok(()) => println!("  Unexpected success"),
+        Err(e) => {
+            println!("  Expected error occurred:");
+            println!("  {}", e);
+
+            // Show actual Sixel position for debugging
+            let regions = harness.sixel_regions();
+            if !regions.is_empty() {
+                println!("\n  Actual Sixel locations:");
+                for (i, region) in regions.iter().enumerate() {
+                    println!("    Sixel {}: row={}, col={}, size={}x{}",
+                        i, region.start_row, region.start_col,
+                        region.width, region.height);
+                }
+            }
+            println!("  ✓ Error provides position information for debugging");
+        }
+    }
+
+    // Scenario 3: Multiple Sixels, some out of bounds
+    println!("\nScenario 3: Multiple Sixels with boundary violations");
+    harness.state_mut().feed(b"\x1b[10;50H\x1bPq\"1;1;150;100#0~\x1b\\");  // In preview
+    harness.state_mut().feed(b"\x1b[20;10H\x1bPq\"1;1;80;60#0~\x1b\\");    // Outside preview
+
+    let preview_area = (5, 40, 35, 15);
+    match harness.assert_sixel_within_bounds(preview_area) {
+        Ok(()) => println!("  Unexpected success"),
+        Err(e) => {
+            println!("  Expected error occurred:");
+            println!("  {}", e);
+            println!("\n  Total Sixels: {}", harness.sixel_count());
+            println!("  In preview: {}",
+                harness.sixel_regions().iter()
+                    .filter(|r| r.start_row >= 5 && r.start_col >= 40)
+                    .count());
+            println!("  ✓ Can identify which Sixels violate bounds");
+        }
+    }
+
+    println!("\n✓ Error handling examples completed");
     println!();
     Ok(())
 }

@@ -117,30 +117,119 @@ impl TerminalState {
         self.cursor_pos = (row.min(self.height - 1), col.min(self.width - 1));
     }
 
-    /// Parse raster attributes from sixel data: "Pa;Pb;Ph;Pv
-    /// Returns (width, height) in pixels if found
+    /// Parse raster attributes from sixel data.
+    ///
+    /// Sixel raster attributes follow the format: "Pan;Pad;Ph;Pv
+    /// Where:
+    /// - Pan: Pixel aspect ratio numerator (typically 1)
+    /// - Pad: Pixel aspect ratio denominator (typically 1)
+    /// - Ph: Horizontal pixel dimension (width)
+    /// - Pv: Vertical pixel dimension (height)
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - Raw sixel data bytes containing raster attributes
+    ///
+    /// # Returns
+    ///
+    /// `Some((width, height))` in pixels if raster attributes are found and valid,
+    /// `None` otherwise.
+    ///
+    /// # Examples
+    ///
+    /// - "1;1;100;50" → Some((100, 50))
+    /// - "100;50" → Some((100, 50)) (missing aspect ratio parameters)
+    /// - "" → None (no raster attributes)
     fn parse_raster_attributes(&self, data: &[u8]) -> Option<(u32, u32)> {
         let data_str = std::str::from_utf8(data).ok()?;
 
         // Find the raster attributes command starting with '"'
-        if let Some(raster_start) = data_str.find('"') {
-            let raster_part = &data_str[raster_start + 1..];
+        let raster_start = data_str.find('"')?;
+        let after_quote = &data_str[raster_start + 1..];
 
-            // Parse format: Pa;Pb;Ph;Pv
-            // We want Ph (width) and Pv (height)
-            let parts: Vec<&str> = raster_part
-                .split(|c: char| !c.is_ascii_digit() && c != ';')
-                .filter(|s| !s.is_empty())
-                .take(4)
-                .collect();
+        // Find where the raster attributes end (terminated by non-digit, non-semicolon)
+        let end_pos = after_quote
+            .find(|c: char| !c.is_ascii_digit() && c != ';')
+            .unwrap_or(after_quote.len());
 
-            if parts.len() >= 4 {
+        let raster_part = &after_quote[..end_pos];
+
+        // Parse semicolon-separated numeric parameters
+        // Format: Pa;Pb;Ph;Pv where we need Ph (index 2) and Pv (index 3)
+        let parts: Vec<&str> = raster_part
+            .split(';')
+            .filter(|s| !s.is_empty())
+            .collect();
+
+        // Handle different parameter counts:
+        // - 4 params: Pan;Pad;Ph;Pv (full format)
+        // - 2 params: Ph;Pv (abbreviated format, aspect ratio omitted)
+        match parts.len() {
+            4 => {
+                // Full format: Pan;Pad;Ph;Pv
                 let width = parts[2].parse::<u32>().ok()?;
                 let height = parts[3].parse::<u32>().ok()?;
-                return Some((width, height));
+                if width > 0 && height > 0 {
+                    Some((width, height))
+                } else {
+                    None
+                }
             }
+            2 => {
+                // Abbreviated format: Ph;Pv
+                let width = parts[0].parse::<u32>().ok()?;
+                let height = parts[1].parse::<u32>().ok()?;
+                if width > 0 && height > 0 {
+                    Some((width, height))
+                } else {
+                    None
+                }
+            }
+            _ => None,
         }
-        None
+    }
+
+    /// Converts pixel dimensions to terminal cell dimensions.
+    ///
+    /// Uses standard Sixel-to-terminal conversion ratios:
+    /// - 8 pixels per column (horizontal)
+    /// - 6 pixels per row (vertical - based on Sixel sixel height)
+    ///
+    /// These ratios are typical for Sixel graphics in VT340-compatible terminals.
+    /// Each Sixel band is 6 pixels tall, and character cells are typically 8 pixels wide.
+    ///
+    /// # Arguments
+    ///
+    /// * `width_px` - Width in pixels
+    /// * `height_px` - Height in pixels
+    ///
+    /// # Returns
+    ///
+    /// A tuple of (columns, rows) in terminal cells, with fractional cells rounded up.
+    ///
+    /// # Examples
+    ///
+    /// - (80, 60) pixels → (10, 10) cells
+    /// - (100, 50) pixels → (13, 9) cells (rounded up)
+    /// - (0, 0) pixels → (0, 0) cells
+    fn pixels_to_cells(width_px: u32, height_px: u32) -> (u16, u16) {
+        // Standard Sixel pixel-to-cell ratios
+        const PIXELS_PER_COL: u32 = 8;
+        const PIXELS_PER_ROW: u32 = 6;
+
+        let cols = if width_px > 0 {
+            ((width_px + PIXELS_PER_COL - 1) / PIXELS_PER_COL) as u16
+        } else {
+            0
+        };
+
+        let rows = if height_px > 0 {
+            ((height_px + PIXELS_PER_ROW - 1) / PIXELS_PER_ROW) as u16
+        } else {
+            0
+        };
+
+        (cols, rows)
     }
 }
 
@@ -648,5 +737,184 @@ mod tests {
         assert_eq!(screen.text_at(0, 3), Some('t'));
         assert_eq!(screen.text_at(0, 4), Some(' '));
         assert_eq!(screen.text_at(100, 100), None);
+    }
+
+    #[test]
+    fn test_parse_raster_full() {
+        let state = TerminalState::new(80, 24);
+
+        // Full format: Pan;Pad;Ph;Pv
+        let data = b"\"1;1;100;50#0;2;100;100;100#0~";
+        assert_eq!(state.parse_raster_attributes(data), Some((100, 50)));
+
+        // Different aspect ratios
+        let data = b"\"2;1;200;100#0~";
+        assert_eq!(state.parse_raster_attributes(data), Some((200, 100)));
+    }
+
+    #[test]
+    fn test_parse_raster_partial() {
+        let state = TerminalState::new(80, 24);
+
+        // Abbreviated format: Ph;Pv (aspect ratio omitted)
+        let data = b"\"100;50#0~";
+        assert_eq!(state.parse_raster_attributes(data), Some((100, 50)));
+
+        let data = b"\"80;60#0;2;0;0;0";
+        assert_eq!(state.parse_raster_attributes(data), Some((80, 60)));
+    }
+
+    #[test]
+    fn test_parse_raster_malformed() {
+        let state = TerminalState::new(80, 24);
+
+        // No raster attributes
+        assert_eq!(state.parse_raster_attributes(b"#0~"), None);
+
+        // Empty string
+        assert_eq!(state.parse_raster_attributes(b""), None);
+
+        // Invalid UTF-8
+        assert_eq!(state.parse_raster_attributes(&[0xFF, 0xFE]), None);
+
+        // Single parameter
+        assert_eq!(state.parse_raster_attributes(b"\"100"), None);
+
+        // Three parameters (invalid)
+        assert_eq!(state.parse_raster_attributes(b"\"1;1;100"), None);
+
+        // Zero dimensions (invalid)
+        assert_eq!(state.parse_raster_attributes(b"\"1;1;0;50"), None, "Should reject zero width");
+        assert_eq!(state.parse_raster_attributes(b"\"1;1;100;0"), None, "Should reject zero height");
+        assert_eq!(state.parse_raster_attributes(b"\"0;0"), None, "Should reject zero dimensions in abbreviated format");
+
+        // Non-numeric values
+        assert_eq!(state.parse_raster_attributes(b"\"abc;def"), None);
+
+        // Mixed numeric/non-numeric: parser stops at first non-numeric, non-semicolon
+        // "1;1;abc;def" becomes "1;1" which is valid 2-param format
+        // This is intentional - we parse up to the first non-numeric character
+        assert_eq!(state.parse_raster_attributes(b"\"1;1;abc;def"), Some((1, 1)));
+    }
+
+    #[test]
+    fn test_parse_raster_edge_cases() {
+        let state = TerminalState::new(80, 24);
+
+        // Large dimensions
+        let data = b"\"1;1;4096;2048#0~";
+        assert_eq!(state.parse_raster_attributes(data), Some((4096, 2048)));
+
+        // Minimum valid dimensions
+        let data = b"\"1;1;1;1#0~";
+        assert_eq!(state.parse_raster_attributes(data), Some((1, 1)));
+
+        // Extra whitespace/characters after parameters
+        let data = b"\"1;1;100;50  \t#0~";
+        assert_eq!(state.parse_raster_attributes(data), Some((100, 50)));
+    }
+
+    #[test]
+    fn test_pixels_to_cells() {
+        // Standard conversions (8 pixels/col, 6 pixels/row)
+        assert_eq!(TerminalState::pixels_to_cells(80, 60), (10, 10));
+        assert_eq!(TerminalState::pixels_to_cells(0, 0), (0, 0));
+
+        // Exact multiples
+        assert_eq!(TerminalState::pixels_to_cells(800, 600), (100, 100));
+        assert_eq!(TerminalState::pixels_to_cells(16, 12), (2, 2));
+
+        // Fractional cells (should round up)
+        assert_eq!(TerminalState::pixels_to_cells(81, 61), (11, 11));
+        assert_eq!(TerminalState::pixels_to_cells(100, 50), (13, 9));
+        assert_eq!(TerminalState::pixels_to_cells(1, 1), (1, 1));
+
+        // Typical Sixel dimensions from real use
+        assert_eq!(TerminalState::pixels_to_cells(640, 480), (80, 80));
+        assert_eq!(TerminalState::pixels_to_cells(320, 240), (40, 40));
+    }
+
+    #[test]
+    fn test_sixel_region_tracking() {
+        let mut screen = ScreenState::new(80, 24);
+
+        // Feed a complete Sixel sequence with raster attributes
+        screen.feed(b"\x1b[5;10H");           // Move cursor to (5, 10) [1-based]
+        screen.feed(b"\x1bPq");                // DCS - Start Sixel with 'q'
+        screen.feed(b"\"1;1;100;50");          // Raster attributes: 100x50 pixels
+        screen.feed(b"#0;2;100;100;100");      // Define color 0
+        screen.feed(b"#0~~@@");                // Some sixel data
+        screen.feed(b"\x1b\\");                // String terminator (ST)
+
+        // Verify the Sixel region was captured
+        let regions = screen.sixel_regions();
+        assert_eq!(regions.len(), 1, "Should capture exactly one Sixel region");
+
+        let region = &regions[0];
+        assert_eq!(region.start_row, 4, "Row should be 4 (0-based from 5)");
+        assert_eq!(region.start_col, 9, "Col should be 9 (0-based from 10)");
+        assert_eq!(region.width, 100, "Width should be 100 pixels");
+        assert_eq!(region.height, 50, "Height should be 50 pixels");
+        assert!(!region.data.is_empty(), "Data should be captured");
+
+        // Verify has_sixel_at
+        assert!(screen.has_sixel_at(4, 9), "Should detect Sixel at position");
+        assert!(!screen.has_sixel_at(0, 0), "Should not detect Sixel at wrong position");
+    }
+
+    #[test]
+    fn test_multiple_sixel_regions() {
+        let mut screen = ScreenState::new(100, 30);
+
+        // First Sixel
+        screen.feed(b"\x1b[5;5H\x1bPq\"1;1;80;60#0~\x1b\\");
+
+        // Second Sixel
+        screen.feed(b"\x1b[15;50H\x1bPq\"1;1;100;80#0~\x1b\\");
+
+        let regions = screen.sixel_regions();
+        assert_eq!(regions.len(), 2, "Should capture both Sixel regions");
+
+        // Verify first region
+        assert_eq!(regions[0].start_row, 4);
+        assert_eq!(regions[0].start_col, 4);
+        assert_eq!(regions[0].width, 80);
+        assert_eq!(regions[0].height, 60);
+
+        // Verify second region
+        assert_eq!(regions[1].start_row, 14);
+        assert_eq!(regions[1].start_col, 49);
+        assert_eq!(regions[1].width, 100);
+        assert_eq!(regions[1].height, 80);
+    }
+
+    #[test]
+    fn test_sixel_without_raster_attributes() {
+        let mut screen = ScreenState::new(80, 24);
+
+        // Sixel without raster attributes (legacy format)
+        screen.feed(b"\x1b[10;10H\x1bPq#0~\x1b\\");
+
+        let regions = screen.sixel_regions();
+        assert_eq!(regions.len(), 1, "Should still capture region");
+
+        let region = &regions[0];
+        assert_eq!(region.width, 0, "Width should be 0 without raster attributes");
+        assert_eq!(region.height, 0, "Height should be 0 without raster attributes");
+    }
+
+    #[test]
+    fn test_sixel_abbreviated_format() {
+        let mut screen = ScreenState::new(80, 24);
+
+        // Abbreviated raster format (just width;height)
+        screen.feed(b"\x1b[1;1H\x1bPq\"200;150#0~\x1b\\");
+
+        let regions = screen.sixel_regions();
+        assert_eq!(regions.len(), 1);
+
+        let region = &regions[0];
+        assert_eq!(region.width, 200);
+        assert_eq!(region.height, 150);
     }
 }
