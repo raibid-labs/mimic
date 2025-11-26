@@ -1,4 +1,4 @@
-# Terminal Parser Crate Comparison for term-test
+# Terminal Parser Crate Comparison for mimic
 
 ## Quick Decision Matrix
 
@@ -15,7 +15,7 @@
 | **Binary Size** | Small | Medium | vt100 |
 | **Community Usage** | Moderate | High (wezterm) | termwiz |
 
-## Verdict: Use termwiz for term-test
+## Verdict: Use termwiz for mimic
 
 **Reason:** Sixel support is a hard requirement for MVP Phase 3. Only termwiz/vtparse provides the necessary DCS hooks.
 
@@ -71,7 +71,7 @@
 - Integration with wezterm ecosystem
 
 **Perfect For:**
-- term-test requirements (Sixel position tracking)
+- mimic requirements (Sixel position tracking)
 
 ---
 
@@ -176,7 +176,7 @@ Both use state machine parsers, performance is comparable:
 | Text rendering | ~500ns | ~600ns | TIE |
 | DCS parsing | N/A | ~2μs | termwiz (only option) |
 
-**Conclusion:** Performance difference negligible for term-test use case.
+**Conclusion:** Performance difference negligible for mimic use case.
 
 ### Memory Usage
 
@@ -313,7 +313,7 @@ Week 3: Polish and test
 
 ## Recommendation Summary
 
-### For term-test MVP (Phase 3)
+### For mimic MVP (Phase 3)
 
 **DECISION: Use termwiz/vtparse**
 
@@ -390,7 +390,7 @@ termwiz = { version = "0.23", default-features = false }
 
 ## Final Answer to Your Question
 
-**Q: Can vt100 crate handle Sixel support for term-test?**
+**Q: Can vt100 crate handle Sixel support for mimic?**
 
 **A: NO. Use termwiz/vtparse instead.**
 

@@ -1,7 +1,7 @@
 //! Keyboard event simulation demonstration.
 //!
 //! This example shows how to use the keyboard event simulation features
-//! of term-test to send various types of input to TUI applications.
+//! of mimic to send various types of input to TUI applications.
 //!
 //! # Running This Example
 //!

@@ -1,6 +1,6 @@
 # CI/CD Pipeline Verification - Complete Documentation
 
-This directory contains comprehensive analysis and recommendations for the GitHub Actions CI/CD pipeline used by the term-test project.
+This directory contains comprehensive analysis and recommendations for the GitHub Actions CI/CD pipeline used by the mimic project.
 
 ## Quick Navigation
 
@@ -194,7 +194,7 @@ After implementing changes, verify:
 
 ## File Locations
 
-All verification documents are in: `/home/beengud/raibid-labs/term-test/`
+All verification documents are in: `/home/beengud/raibid-labs/mimic/`
 
 ### Documentation Files
 - `CI_VERIFICATION_COMPLETE.txt` - Sign-off document

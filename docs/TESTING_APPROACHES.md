@@ -170,7 +170,7 @@ fn test_table_output() {
 
 ### Tools
 
-- `term-test` (this library)
+- `mimic` (this library)
 - `portable-pty` (lower level)
 - Custom test harnesses
 
@@ -246,7 +246,7 @@ fn test_navigation_flow() -> Result<()> {
 
 ### Tools
 
-- `term-test` with Sixel support
+- `mimic` with Sixel support
 - Reference test images (libsixel, Jexer)
 - PTY + terminal emulator with graphics support
 
@@ -320,7 +320,7 @@ fn test_image_display() -> Result<()> {
 ### Tools
 
 - `tokio::test` or `async_std::test`
-- `term-test` async harness
+- `mimic` async harness
 - Async test utilities
 
 ### Example
@@ -515,16 +515,16 @@ criterion_main!(benches);
 
 ```
 40% Unit tests (TestBackend)
-30% Integration tests (term-test PTY)
+30% Integration tests (mimic PTY)
 20% Snapshot tests (insta)
-10% E2E scenarios (term-test)
+10% E2E scenarios (mimic)
 ```
 
 ### For Graphics-Heavy Applications
 
 ```
 30% Unit tests (TestBackend)
-30% Integration tests (term-test PTY)
+30% Integration tests (mimic PTY)
 25% Graphics protocol tests (Sixel)
 15% Snapshot tests (insta)
 ```
@@ -533,7 +533,7 @@ criterion_main!(benches);
 
 ```
 35% Unit tests (TestBackend)
-35% Async integration tests (term-test async)
+35% Async integration tests (mimic async)
 20% Event-driven tests
 10% Snapshot tests (insta)
 ```

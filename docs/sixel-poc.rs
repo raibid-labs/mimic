@@ -334,7 +334,7 @@ fn main() {
     println!("{}", "=".repeat(70));
 
     println!("\nSUCCESS: Sixel detection and position tracking working!");
-    println!("\nFor term-test integration:");
+    println!("\nFor mimic integration:");
     println!("- Use this VTActor pattern to track all escape sequences");
     println!("- Store sixel_regions for collision detection");
     println!("- Calculate occupied cells for rendering decisions");

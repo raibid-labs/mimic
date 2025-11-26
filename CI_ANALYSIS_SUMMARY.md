@@ -1,6 +1,6 @@
 # CI/CD Pipeline Analysis - Executive Summary
 
-**Project:** term-test (Raibid Labs)
+**Project:** mimic (Raibid Labs)
 **Date:** November 20, 2025
 **Status:** APPROVED FOR GITHUB ACTIONS DEPLOYMENT
 **Confidence Level:** 95%

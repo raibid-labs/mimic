@@ -239,10 +239,10 @@ act -j test
 ## CI Badge for README
 
 ```markdown
-[![CI](https://github.com/raibid-labs/term-test/workflows/CI/badge.svg)](https://github.com/raibid-labs/term-test/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/raibid-labs/term-test/branch/main/graph/badge.svg)](https://codecov.io/gh/raibid-labs/term-test)
-[![Crates.io](https://img.shields.io/crates/v/term-test.svg)](https://crates.io/crates/term-test)
-[![Documentation](https://docs.rs/term-test/badge.svg)](https://docs.rs/term-test)
+[![CI](https://github.com/raibid-labs/mimic/workflows/CI/badge.svg)](https://github.com/raibid-labs/mimic/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/raibid-labs/mimic/branch/main/graph/badge.svg)](https://codecov.io/gh/raibid-labs/mimic)
+[![Crates.io](https://img.shields.io/crates/v/mimic.svg)](https://crates.io/crates/mimic)
+[![Documentation](https://docs.rs/mimic/badge.svg)](https://docs.rs/mimic)
 ```
 
 ## Performance Targets
@@ -258,8 +258,8 @@ act -j test
 
 - [CI Workflow](../.github/workflows/ci.yml)
 - [Dependabot Config](../.github/dependabot.yml)
-- [Codecov Dashboard](https://codecov.io/gh/raibid-labs/term-test)
-- [GitHub Actions](https://github.com/raibid-labs/term-test/actions)
+- [Codecov Dashboard](https://codecov.io/gh/raibid-labs/mimic)
+- [GitHub Actions](https://github.com/raibid-labs/mimic/actions)
 
 ---
 

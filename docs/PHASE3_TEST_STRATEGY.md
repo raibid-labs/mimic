@@ -834,7 +834,7 @@ tests/fixtures/sixel/
 ```markdown
 # Sixel Test Fixtures
 
-This directory contains Sixel graphics test data for term-test Phase 3.
+This directory contains Sixel graphics test data for mimic Phase 3.
 
 ## Fixtures
 
@@ -1112,4 +1112,4 @@ Test strategy is successful when:
 
 **Document Status**: Design Complete
 **Next Step**: Begin implementation
-**Maintainer**: term-test development team
+**Maintainer**: mimic development team

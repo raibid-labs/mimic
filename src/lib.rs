@@ -1,10 +1,10 @@
-//! # term-test
+//! # mimic
 //!
 //! A Rust library for integration testing of terminal user interface (TUI) applications.
 //!
 //! ## Overview
 //!
-//! `term-test` provides a comprehensive testing framework for TUI applications built with
+//! `mimic` provides a comprehensive testing framework for TUI applications built with
 //! libraries like Ratatui, with first-class support for:
 //!
 //! - **PTY-based testing**: Real terminal emulation with pseudo-terminal support

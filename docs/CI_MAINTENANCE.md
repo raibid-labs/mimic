@@ -2,7 +2,7 @@
 
 ## Overview
 
-The term-test project uses GitHub Actions for continuous integration and deployment. This guide covers how to maintain and troubleshoot the CI/CD pipeline.
+The mimic project uses GitHub Actions for continuous integration and deployment. This guide covers how to maintain and troubleshoot the CI/CD pipeline.
 
 ## CI/CD Architecture
 

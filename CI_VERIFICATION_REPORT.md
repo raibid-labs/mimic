@@ -1,8 +1,8 @@
 # CI/CD Pipeline Verification Report
 
 **Date:** November 20, 2025
-**Project:** term-test
-**Repository:** raibid-labs/term-test
+**Project:** mimic
+**Repository:** raibid-labs/mimic
 **Workflow Status:** VERIFIED WITH RECOMMENDATIONS
 
 ---
@@ -507,20 +507,20 @@ The pipeline will succeed in GitHub Actions with these characteristics:
 ## Appendix B: File References
 
 **Workflow Files:**
-- `/home/beengud/raibid-labs/term-test/.github/workflows/ci.yml` (Main CI workflow)
-- `/home/beengud/raibid-labs/term-test/.github/workflows/docs.yml` (Documentation)
-- `/home/beengud/raibid-labs/term-test/.github/workflows/release.yml` (Release process)
+- `/home/beengud/raibid-labs/mimic/.github/workflows/ci.yml` (Main CI workflow)
+- `/home/beengud/raibid-labs/mimic/.github/workflows/docs.yml` (Documentation)
+- `/home/beengud/raibid-labs/mimic/.github/workflows/release.yml` (Release process)
 
 **Configuration Files:**
-- `/home/beengud/raibid-labs/term-test/Cargo.toml` (Project manifest)
-- `/home/beengud/raibid-labs/term-test/Cargo.lock` (Dependency lock)
+- `/home/beengud/raibid-labs/mimic/Cargo.toml` (Project manifest)
+- `/home/beengud/raibid-labs/mimic/Cargo.lock` (Dependency lock)
 
 **Test Files:**
-- `/home/beengud/raibid-labs/term-test/tests/integration/basic.rs`
-- `/home/beengud/raibid-labs/term-test/tests/integration/process.rs`
-- `/home/beengud/raibid-labs/term-test/tests/integration/errors.rs`
-- `/home/beengud/raibid-labs/term-test/tests/integration/bevy.rs`
-- `/home/beengud/raibid-labs/term-test/tests/integration/sixel.rs`
+- `/home/beengud/raibid-labs/mimic/tests/integration/basic.rs`
+- `/home/beengud/raibid-labs/mimic/tests/integration/process.rs`
+- `/home/beengud/raibid-labs/mimic/tests/integration/errors.rs`
+- `/home/beengud/raibid-labs/mimic/tests/integration/bevy.rs`
+- `/home/beengud/raibid-labs/mimic/tests/integration/sixel.rs`
 
 ---
 

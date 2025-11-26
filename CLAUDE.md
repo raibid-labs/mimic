@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**term-test** is a Rust library for integration testing of terminal user interface (TUI) applications, particularly those built with Ratatui. The library enables testing features that require actual terminal escape sequence processing, including Sixel image rendering, which cannot be tested with Ratatui's built-in `TestBackend`.
+**mimic** is a Rust library for integration testing of terminal user interface (TUI) applications, particularly those built with Ratatui. The library enables testing features that require actual terminal escape sequence processing, including Sixel image rendering, which cannot be tested with Ratatui's built-in `TestBackend`.
 
 ## Project Genesis
 
@@ -110,7 +110,7 @@ Created comprehensive documentation:
    - Analysis of tui-term
    - Comparison matrix
    - Gap analysis showing what's missing
-   - How term-test fits into the ecosystem
+   - How mimic fits into the ecosystem
 
 4. **TESTING_APPROACHES.md** (5,500+ words)
    - Testing pyramid for TUI applications
@@ -179,11 +179,11 @@ Created comprehensive documentation:
 
 ### 4. Complementary, Not Competitive
 
-**Decision**: Position term-test as complementary to TestBackend
+**Decision**: Position mimic as complementary to TestBackend
 
 **Rationale**:
 - TestBackend is excellent for unit tests
-- term-test fills the integration testing gap
+- mimic fills the integration testing gap
 - Different tools for different jobs
 - Reduces adoption friction
 
@@ -199,7 +199,7 @@ Created comprehensive documentation:
 
 ## Gap Analysis: What Was Missing
 
-Before term-test, the Ratatui testing ecosystem had these gaps:
+Before mimic, the Ratatui testing ecosystem had these gaps:
 
 1. **No PTY-based integration testing** - TestBackend is in-memory only
 2. **No graphics protocol testing** - Sixel rendering untestable
@@ -207,7 +207,7 @@ Before term-test, the Ratatui testing ecosystem had these gaps:
 4. **No full E2E testing** - Can't test complete user flows
 5. **Limited async support** - No async-aware test harness
 
-term-test addresses all of these gaps.
+mimic addresses all of these gaps.
 
 ## Technical Challenges Identified
 
@@ -337,7 +337,7 @@ term-test addresses all of these gaps.
 - Downloads on crates.io
 - GitHub stars
 - Community contributions
-- Projects using term-test
+- Projects using mimic
 - Listed in Ratatui ecosystem
 
 ## Next Steps
@@ -424,7 +424,7 @@ Used web search to gather information on:
 Structured documentation to serve multiple audiences:
 - **RESEARCH.md**: For understanding the problem space and existing solutions
 - **ARCHITECTURE.md**: For implementers who will build the library
-- **EXISTING_SOLUTIONS.md**: For users wondering why term-test is needed
+- **EXISTING_SOLUTIONS.md**: For users wondering why mimic is needed
 - **TESTING_APPROACHES.md**: For users learning how to test TUIs
 - **ROADMAP.md**: For contributors and stakeholders tracking progress
 - **README.md**: For first-time visitors to understand the project
@@ -462,7 +462,7 @@ Structured documentation to serve multiple audiences:
 
 ## Conclusion
 
-This session completed the research and design phase for term-test. The library has a clear purpose (integration testing for Ratatui TUIs), a well-defined architecture (5 layers), comprehensive documentation (>20,000 words), and a concrete roadmap (8 phases to 1.0).
+This session completed the research and design phase for mimic. The library has a clear purpose (integration testing for Ratatui TUIs), a well-defined architecture (5 layers), comprehensive documentation (>20,000 words), and a concrete roadmap (8 phases to 1.0).
 
 The next session should focus on:
 1. Setting up the Rust project structure

@@ -1,4 +1,4 @@
-# Clippy configuration for term-test
+# Clippy configuration for mimic
 msrv = "1.75"
 
 # Lints to allow

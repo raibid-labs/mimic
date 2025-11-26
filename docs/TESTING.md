@@ -1,6 +1,6 @@
-# Testing Guide for term-test
+# Testing Guide for mimic
 
-This document describes the test architecture and patterns used in term-test.
+This document describes the test architecture and patterns used in mimic.
 
 ## Test Organization
 

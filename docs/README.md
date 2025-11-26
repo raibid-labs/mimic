@@ -1,6 +1,6 @@
-# term-test Documentation
+# mimic Documentation
 
-This directory contains research and documentation for the term-test project.
+This directory contains research and documentation for the mimic project.
 
 ## Sixel Support Research (Phase 3 MVP)
 
@@ -49,7 +49,7 @@ This directory contains research and documentation for the term-test project.
 - ✅ Complete DCS hooks
 - ✅ Proven in production (wezterm)
 - ✅ Working proof-of-concept
-- **Verdict:** RECOMMENDED for term-test
+- **Verdict:** RECOMMENDED for mimic
 
 ## Evidence
 
@@ -103,7 +103,7 @@ pub struct SixelRegion {
 ## File Locations
 
 ```
-term-test/
+mimic/
 ├── SIXEL-SUPPORT-VALIDATION.md  (Main report - start here)
 └── docs/
     ├── README.md                 (This file)
@@ -148,7 +148,7 @@ impl VTActor for MyTerminal {
 1. Read SIXEL-SUPPORT-VALIDATION.md for complete analysis
 2. Review sixel-poc.rs for implementation pattern
 3. Add termwiz dependency to Cargo.toml
-4. Implement VTActor trait for term-test
+4. Implement VTActor trait for mimic
 5. Add Sixel region tracking
 6. Write integration tests
 

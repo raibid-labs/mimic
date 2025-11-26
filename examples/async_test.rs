@@ -1,7 +1,7 @@
 //! Async/Tokio testing example.
 //!
 //! This example demonstrates async testing patterns with Tokio runtime:
-//! - Using term-test in async contexts
+//! - Using mimic in async contexts
 //! - Integrating with Tokio async/await
 //! - Testing async TUI applications
 //! - Combining async I/O with terminal testing
@@ -21,7 +21,7 @@
 //! - Network communication
 //! - Event-driven architectures
 //!
-//! term-test's sync API works well with async runtimes by allowing you to:
+//! mimic's sync API works well with async runtimes by allowing you to:
 //! - Wrap sync operations in async functions
 //! - Use tokio::time for delays instead of std::thread::sleep
 //! - Integrate with other async libraries

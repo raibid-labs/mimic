@@ -397,7 +397,7 @@ Parallel: Dependabot Security Updates
 └─────────┼─────────────────┼─────────────────┼──────────────┘
           │                 │                 │
 ┌─────────┼─────────────────┼─────────────────┼──────────────┐
-│         │  term-test CI/CD Infrastructure   │              │
+│         │  mimic CI/CD Infrastructure   │              │
 │         │                 │                 │              │
 │  ┌──────▼──────────┐  ┌───▼────────┐  ┌─────▼──────┐       │
 │  │   Workflows     │  │   Config   │  │   Docs     │       │

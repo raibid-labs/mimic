@@ -1,6 +1,6 @@
-//! Basic usage example of term-test.
+//! Basic usage example of mimic.
 //!
-//! This example demonstrates the core functionality of the term-test library:
+//! This example demonstrates the core functionality of the mimic library:
 //! - Creating a PTY-based test harness
 //! - Spawning processes in the pseudo-terminal
 //! - Capturing and inspecting screen output
@@ -30,7 +30,7 @@ use term_test::{Result, TuiTestHarness};
 use std::time::Duration;
 
 fn main() -> Result<()> {
-    println!("=== Basic term-test Example ===\n");
+    println!("=== Basic mimic Example ===\n");
 
     // Example 1: Simple echo command
     // This demonstrates the most basic usage: spawning a command and capturing output
@@ -73,10 +73,10 @@ fn example_1_simple_echo() -> Result<()> {
 
     // Spawn a simple echo command
     let mut cmd = CommandBuilder::new("echo");
-    cmd.arg("Hello from term-test!");
+    cmd.arg("Hello from mimic!");
 
     harness.spawn(cmd)?;
-    println!("Spawned: echo 'Hello from term-test!'");
+    println!("Spawned: echo 'Hello from mimic!'");
 
     // Give the command time to execute and output
     std::thread::sleep(Duration::from_millis(100));
@@ -98,7 +98,7 @@ fn example_1_simple_echo() -> Result<()> {
     println!("Cursor position: row={}, col={}", row, col);
 
     // Verify the text appears on screen
-    assert!(contents.contains("Hello from term-test!"),
+    assert!(contents.contains("Hello from mimic!"),
         "Expected text not found in output");
 
     // Note: wait_exit() can hang with very short-lived processes
@@ -262,7 +262,7 @@ fn example_5_cursor_tracking() -> Result<()> {
     std::thread::sleep(Duration::from_millis(100));
     harness.update_state()?;
 
-    // Get cursor position (term-test uses 0-based indexing)
+    // Get cursor position (mimic uses 0-based indexing)
     let (row, col) = harness.cursor_position();
     println!("\nCursor position after movement:");
     println!("  Row: {} (0-based)", row);
@@ -270,7 +270,7 @@ fn example_5_cursor_tracking() -> Result<()> {
 
     // The cursor should be near row 4 (5-1), col 10 (after printing X)
     println!("\nNote: Escape sequences use 1-based indexing,");
-    println!("      but term-test returns 0-based positions.");
+    println!("      but mimic returns 0-based positions.");
 
     // Verify the character was placed at the cursor position
     let contents = harness.screen_contents();

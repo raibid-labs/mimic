@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Install git pre-commit hooks for term-test
+# Install git pre-commit hooks for mimic
 #
 
 set -euo pipefail
@@ -25,7 +25,7 @@ cd "$REPO_ROOT"
 HOOKS_DIR="$REPO_ROOT/.git/hooks"
 PRE_COMMIT_HOOK="$HOOKS_DIR/pre-commit"
 
-print_header "Installing pre-commit hooks for term-test"
+print_header "Installing pre-commit hooks for mimic"
 
 # Ensure hooks directory exists
 mkdir -p "$HOOKS_DIR"
@@ -34,7 +34,7 @@ mkdir -p "$HOOKS_DIR"
 cat > "$PRE_COMMIT_HOOK" << 'EOF'
 #!/usr/bin/env bash
 #
-# Pre-commit hook for term-test
+# Pre-commit hook for mimic
 # Runs fast checks before allowing commit
 #
 

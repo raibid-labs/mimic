@@ -1,4 +1,4 @@
-//! Error types for term-test.
+//! Error types for mimic.
 //!
 //! This module defines all error types that can occur during TUI testing operations.
 //! The main error type [`TermTestError`] is an enum covering all possible failure modes,
@@ -25,7 +25,7 @@
 use std::io;
 use thiserror::Error;
 
-/// Result type alias for term-test operations.
+/// Result type alias for mimic operations.
 ///
 /// This is a convenience alias for `std::result::Result<T, TermTestError>`.
 /// Most public APIs in this crate return this type.
@@ -43,7 +43,7 @@ pub type Result<T> = std::result::Result<T, TermTestError>;
 
 /// Errors that can occur during TUI testing.
 ///
-/// This enum represents all possible error conditions in the term-test library.
+/// This enum represents all possible error conditions in the mimic library.
 /// Each variant provides specific context about the failure.
 ///
 /// # Variants

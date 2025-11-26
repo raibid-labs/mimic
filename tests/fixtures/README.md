@@ -1,6 +1,6 @@
 # Test Fixtures
 
-This directory contains test fixtures for term-test integration tests.
+This directory contains test fixtures for mimic integration tests.
 
 ## Structure
 

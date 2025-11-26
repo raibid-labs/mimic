@@ -1,4 +1,4 @@
-//! Demonstration of wait condition patterns in term-test.
+//! Demonstration of wait condition patterns in mimic.
 //!
 //! This example shows various wait patterns for testing TUI applications:
 //! - Waiting for text to appear

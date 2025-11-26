@@ -1,4 +1,4 @@
-# term-test Implementation Roadmap
+# mimic Implementation Roadmap
 
 ## 🎉 Phase 1 Complete! Ready for Phase 2
 
@@ -449,7 +449,7 @@ harness.wait_for(|state| state.contains("Done")).await?;
 - All public APIs documented
 - Comprehensive test coverage
 - No known critical bugs
-- **dgx-pixels can adopt term-test**
+- **dgx-pixels can adopt mimic**
 - Clear, helpful error messages
 - CI/CD pipeline green
 
@@ -537,7 +537,7 @@ harness.wait_for(|state| state.contains("Done")).await?;
 - Test dgx-pixels Bevy systems
 - Run in CI/CD headlessly
 
-**Success**: dgx-pixels can adopt and use term-test for integration testing
+**Success**: dgx-pixels can adopt and use mimic for integration testing
 
 ---
 
@@ -662,7 +662,7 @@ optional = true
 
 ### Adoption (MVP)
 
-- [ ] dgx-pixels successfully integrates term-test
+- [ ] dgx-pixels successfully integrates mimic
 - [ ] Can test all 8 dgx-pixels screens
 - [ ] Detects Sixel positioning bugs
 - [ ] Detects Sixel persistence bugs
@@ -672,7 +672,7 @@ optional = true
 
 - [ ] Published on crates.io
 - [ ] Listed in Ratatui ecosystem
-- [ ] 3+ projects using term-test
+- [ ] 3+ projects using mimic
 - [ ] Community contributions
 
 ---
@@ -681,16 +681,16 @@ optional = true
 
 ### Pre-Integration (Phase 1-2)
 
-- [x] term-test can spawn external binaries
-- [x] term-test can send text input
-- [ ] term-test can send keyboard events (Phase 2)
-- [ ] term-test has async Tokio support (Phase 2)
+- [x] mimic can spawn external binaries
+- [x] mimic can send text input
+- [ ] mimic can send keyboard events (Phase 2)
+- [ ] mimic has async Tokio support (Phase 2)
 
 ### Integration Phase (Phase 3-4)
 
-- [ ] term-test tracks Sixel positions
-- [ ] term-test integrates with Bevy
-- [ ] term-test supports bevy_ratatui
+- [ ] mimic tracks Sixel positions
+- [ ] mimic integrates with Bevy
+- [ ] mimic supports bevy_ratatui
 
 ### Testing Phase (Phase 5-6)
 
@@ -702,7 +702,7 @@ optional = true
 
 ### Release
 
-- [ ] dgx-pixels adopts term-test
+- [ ] dgx-pixels adopts mimic
 - [ ] CI/CD includes integration tests
 - [ ] Documentation includes dgx-pixels examples
 

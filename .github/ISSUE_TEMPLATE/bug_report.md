@@ -28,7 +28,7 @@ assignees: ''
 
 - OS: <!-- e.g., Ubuntu 22.04, macOS 13.0, Windows 11 -->
 - Rust Version: <!-- Run `rustc --version` -->
-- term-test Version: <!-- e.g., 0.1.0 -->
+- mimic Version: <!-- e.g., 0.1.0 -->
 - Terminal: <!-- e.g., xterm, kitty, alacritty, gnome-terminal -->
 - Display Server: <!-- e.g., X11, Wayland, headless -->
 

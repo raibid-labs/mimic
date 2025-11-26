@@ -1,4 +1,4 @@
-//! Basic integration tests for term-test.
+//! Basic integration tests for mimic.
 
 use term_test::{Result, TuiTestHarness};
 

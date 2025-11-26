@@ -1,16 +1,16 @@
-# term-test
+# mimic
 
 > A Rust library for integration testing of terminal user interface (TUI) applications with first-class support for Ratatui, Bevy ECS integration, and Sixel graphics protocols.
 
 ## Overview
 
-`term-test` bridges the gap between unit testing with Ratatui's `TestBackend` and real-world integration testing of TUI applications. It provides a PTY-based test harness that enables testing of features requiring actual terminal escape sequence processing, including **Sixel graphics position verification**, **Bevy ECS integration**, **bevy_ratatui support**, and complex user interaction flows.
+`mimic` bridges the gap between unit testing with Ratatui's `TestBackend` and real-world integration testing of TUI applications. It provides a PTY-based test harness that enables testing of features requiring actual terminal escape sequence processing, including **Sixel graphics position verification**, **Bevy ECS integration**, **bevy_ratatui support**, and complex user interaction flows.
 
 ### MVP Goal
 
 Built to enable comprehensive integration testing for the [**dgx-pixels**](https://github.com/raibid-labs/dgx-pixels) project - a Bevy-based TUI application with Sixel graphics support.
 
-### Why term-test?
+### Why mimic?
 
 **Current Limitation**: Ratatui's `TestBackend` is great for unit testing widgets and layouts, but it can't test:
 - PTY-specific behavior (terminal size negotiation, TTY detection)
@@ -19,7 +19,7 @@ Built to enable comprehensive integration testing for the [**dgx-pixels**](https
 - User interaction flows
 - Event handling in actual terminal context
 
-**Solution**: `term-test` runs your TUI application in a real pseudo-terminal (PTY), captures the output using a terminal emulator, and provides an ergonomic API for assertions and snapshot testing.
+**Solution**: `mimic` runs your TUI application in a real pseudo-terminal (PTY), captures the output using a terminal emulator, and provides an ergonomic API for assertions and snapshot testing.
 
 ### Key Features
 
@@ -151,7 +151,7 @@ async fn test_sixel_clears_on_screen_change() -> Result<()> {
   - Snapshot testing with insta/expect-test
   - term-transcript (CLI testing)
   - tui-term (pseudoterminal widget)
-  - Comparison matrix showing gaps that term-test fills
+  - Comparison matrix showing gaps that mimic fills
 
 - **[TESTING_APPROACHES.md](./docs/TESTING_APPROACHES.md)** - Comprehensive guide to TUI testing methodologies:
   - The testing pyramid for TUI applications
@@ -190,16 +190,16 @@ async fn test_sixel_clears_on_screen_change() -> Result<()> {
 | **Testing Strategies** | TESTING_APPROACHES.md | Testing Pyramid, Common Patterns |
 | **Technical Research** | RESEARCH.md | VTE vs vt100, PTY Libraries, Sixel Testing |
 
-## How term-test Complements Existing Tools
+## How mimic Complements Existing Tools
 
 | Testing Level | Use This | For What |
 |---------------|----------|----------|
 | **Unit Tests** | Ratatui's TestBackend + insta | Individual widgets, layout calculations |
-| **Integration Tests** | **term-test** | Full app behavior, PTY interaction, graphics |
+| **Integration Tests** | **mimic** | Full app behavior, PTY interaction, graphics |
 | **CLI Tests** | assert_cmd | Binary execution, exit codes |
 | **Snapshot Tests** | insta or expect-test | Both unit and integration levels |
 
-`term-test` is **complementary, not competitive** - it fills the integration testing gap that TestBackend cannot address.
+`mimic` is **complementary, not competitive** - it fills the integration testing gap that TestBackend cannot address.
 
 ## Project Goals
 
@@ -211,7 +211,7 @@ async fn test_sixel_clears_on_screen_change() -> Result<()> {
 
 ## Comparison with Ratatui's TestBackend
 
-| Feature | TestBackend | term-test |
+| Feature | TestBackend | mimic |
 |---------|-------------|-----------|
 | **Speed** | Very Fast | Moderate |
 | **Setup Complexity** | Simple | Moderate |
@@ -223,7 +223,7 @@ async fn test_sixel_clears_on_screen_change() -> Result<()> {
 | **Async Support** | Basic | Full |
 | **Snapshot Testing** | Via insta/expect | Built-in |
 
-**Recommendation**: Use TestBackend for unit tests, term-test for integration tests.
+**Recommendation**: Use TestBackend for unit tests, mimic for integration tests.
 
 ## Architecture Highlights
 
@@ -311,8 +311,8 @@ TBD (likely MIT or MIT/Apache-2.0 dual license)
 
 ## Contact
 
-- **Issues**: [GitHub Issues](https://github.com/[user]/term-test/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/[user]/term-test/discussions)
+- **Issues**: [GitHub Issues](https://github.com/[user]/mimic/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/[user]/mimic/discussions)
 
 ---
 

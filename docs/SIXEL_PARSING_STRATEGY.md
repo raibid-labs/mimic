@@ -6,7 +6,7 @@
 
 ## Overview
 
-This document describes the parsing strategy for Sixel graphics in term-test, focusing on extracting dimensions and position information needed for dgx-pixels testing.
+This document describes the parsing strategy for Sixel graphics in mimic, focusing on extracting dimensions and position information needed for dgx-pixels testing.
 
 ---
 
@@ -694,4 +694,4 @@ Parsing strategy is successful when:
 
 **Document Status**: Design Complete
 **Next Step**: Begin implementation (PHASE3_CHECKLIST.md)
-**Maintainer**: term-test development team
+**Maintainer**: mimic development team

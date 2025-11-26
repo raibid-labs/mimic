@@ -1,8 +1,8 @@
-# term-test Architecture
+# mimic Architecture
 
 ## Purpose
 
-`term-test` is a Rust library for integration testing of terminal user interface (TUI) applications, particularly those built with Ratatui. It enables testing of features that require actual terminal escape sequence processing, including:
+`mimic` is a Rust library for integration testing of terminal user interface (TUI) applications, particularly those built with Ratatui. It enables testing of features that require actual terminal escape sequence processing, including:
 
 - ANSI/VT escape sequences
 - Color and styling
@@ -355,7 +355,7 @@ pub mod async_std {
 ## Module Structure
 
 ```
-term-test/
+mimic/
 ├── src/
 │   ├── lib.rs              # Public API exports
 │   ├── pty.rs              # PTY management (Layer 1)
@@ -743,13 +743,13 @@ pub type Result<T> = std::result::Result<T, TermTestError>;
 - No PTY
 - Text-based assertions
 
-**term-test**:
+**mimic**:
 - Integration testing of full TUI apps
 - Real PTY
 - Supports Sixel and graphics
 - Snapshot testing
 
-**Conclusion**: Complementary, not competitive. Use TestBackend for unit tests, term-test for integration tests.
+**Conclusion**: Complementary, not competitive. Use TestBackend for unit tests, mimic for integration tests.
 
 ### vs. Integration Tests in Other Languages
 
@@ -762,7 +762,7 @@ pub type Result<T> = std::result::Result<T, TermTestError>;
 - Similar to expect
 - Text-based assertions
 
-**term-test**:
+**mimic**:
 - Rust-native
 - Type-safe
 - Graphics support

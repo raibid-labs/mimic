@@ -1,12 +1,12 @@
 [package]
-name = "term-test"
+name = "mimic"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
 authors = ["Raibid Labs"]
 license = "MIT"
 description = "Integration testing library for terminal user interface applications with Sixel and Bevy support"
-repository = "https://github.com/raibid-labs/term-test"
+repository = "https://github.com/raibid-labs/mimic"
 keywords = ["tui", "testing", "ratatui", "sixel", "bevy"]
 categories = ["development-tools::testing", "command-line-interface"]
 
