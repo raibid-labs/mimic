@@ -170,7 +170,7 @@ fn test_table_output() {
 
 ### Tools
 
-- `mimic` (this library)
+- `ratatui-testlib` (this library)
 - `portable-pty` (lower level)
 - Custom test harnesses
 
@@ -246,7 +246,7 @@ fn test_navigation_flow() -> Result<()> {
 
 ### Tools
 
-- `mimic` with Sixel support
+- `ratatui-testlib` with Sixel support
 - Reference test images (libsixel, Jexer)
 - PTY + terminal emulator with graphics support
 
@@ -320,7 +320,7 @@ fn test_image_display() -> Result<()> {
 ### Tools
 
 - `tokio::test` or `async_std::test`
-- `mimic` async harness
+- `ratatui-testlib` async harness
 - Async test utilities
 
 ### Example
@@ -515,16 +515,16 @@ criterion_main!(benches);
 
 ```
 40% Unit tests (TestBackend)
-30% Integration tests (mimic PTY)
+30% Integration tests (ratatui-testlib PTY)
 20% Snapshot tests (insta)
-10% E2E scenarios (mimic)
+10% E2E scenarios (ratatui-testlib)
 ```
 
 ### For Graphics-Heavy Applications
 
 ```
 30% Unit tests (TestBackend)
-30% Integration tests (mimic PTY)
+30% Integration tests (ratatui-testlib PTY)
 25% Graphics protocol tests (Sixel)
 15% Snapshot tests (insta)
 ```
@@ -533,7 +533,7 @@ criterion_main!(benches);
 
 ```
 35% Unit tests (TestBackend)
-35% Async integration tests (mimic async)
+35% Async integration tests (ratatui-testlib async)
 20% Event-driven tests
 10% Snapshot tests (insta)
 ```

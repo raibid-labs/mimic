@@ -1,10 +1,10 @@
-//! # mimic
+//! # ratatui_testlib
 //!
 //! A Rust library for integration testing of terminal user interface (TUI) applications.
 //!
 //! ## Overview
 //!
-//! `mimic` provides a comprehensive testing framework for TUI applications built with
+//! `ratatui_testlib` provides a comprehensive testing framework for TUI applications built with
 //! libraries like Ratatui, with first-class support for:
 //!
 //! - **PTY-based testing**: Real terminal emulation with pseudo-terminal support
@@ -17,7 +17,7 @@
 //! ## Quick Start
 //!
 //! ```rust,no_run
-//! use mimic::{TuiTestHarness, Result};
+//! use ratatui_testlib::{TuiTestHarness, Result};
 //! use portable_pty::CommandBuilder;
 //!
 //! #[test]
@@ -52,9 +52,9 @@
 //! ```rust,no_run
 //! # #[cfg(feature = "sixel")]
 //! # {
-//! use mimic::TuiTestHarness;
+//! use ratatui_testlib::TuiTestHarness;
 //!
-//! # fn test_sixel() -> mimic::Result<()> {
+//! # fn test_sixel() -> ratatui_testlib::Result<()> {
 //! let mut harness = TuiTestHarness::new(80, 24)?;
 //! // ... spawn your app and trigger Sixel rendering ...
 //!

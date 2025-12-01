@@ -106,12 +106,11 @@ jobs:
         run: cargo doc --all-features --no-deps
 
       - name: Add index redirect
-        run: echo '<meta http-equiv="refresh" content="0; url=mimic/index.html">' > target/doc/index.html
+        run: echo '<meta http-equiv="refresh" content="0; url=ratatui_testlib/index.html">' > target/doc/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./target/doc
-          cname: docs.mimic.dev
         if: github.event_name == 'push'

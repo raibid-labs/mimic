@@ -1,6 +1,6 @@
-//! Basic usage example of mimic.
+//! Basic usage example of ratatui_testlib.
 //!
-//! This example demonstrates the core functionality of the mimic library:
+//! This example demonstrates the core functionality of the ratatui_testlib library:
 //! - Creating a PTY-based test harness
 //! - Spawning processes in the pseudo-terminal
 //! - Capturing and inspecting screen output
@@ -26,11 +26,11 @@
 //! Each section shows the captured screen contents and cursor position.
 
 use portable_pty::CommandBuilder;
-use mimic::{Result, TuiTestHarness};
+use ratatui_testlib::{Result, TuiTestHarness};
 use std::time::Duration;
 
 fn main() -> Result<()> {
-    println!("=== Basic mimic Example ===\n");
+    println!("=== Basic ratatui_testlib Example ===\n");
 
     // Example 1: Simple echo command
     // This demonstrates the most basic usage: spawning a command and capturing output
@@ -73,10 +73,10 @@ fn example_1_simple_echo() -> Result<()> {
 
     // Spawn a simple echo command
     let mut cmd = CommandBuilder::new("echo");
-    cmd.arg("Hello from mimic!");
+    cmd.arg("Hello from ratatui_testlib!");
 
     harness.spawn(cmd)?;
-    println!("Spawned: echo 'Hello from mimic!'");
+    println!("Spawned: echo 'Hello from ratatui_testlib!'");
 
     // Give the command time to execute and output
     std::thread::sleep(Duration::from_millis(100));
@@ -98,7 +98,7 @@ fn example_1_simple_echo() -> Result<()> {
     println!("Cursor position: row={}, col={}", row, col);
 
     // Verify the text appears on screen
-    assert!(contents.contains("Hello from mimic!"),
+    assert!(contents.contains("Hello from ratatui_testlib!"),
         "Expected text not found in output");
 
     // Note: wait_exit() can hang with very short-lived processes
@@ -262,7 +262,7 @@ fn example_5_cursor_tracking() -> Result<()> {
     std::thread::sleep(Duration::from_millis(100));
     harness.update_state()?;
 
-    // Get cursor position (mimic uses 0-based indexing)
+    // Get cursor position (ratatui_testlib uses 0-based indexing)
     let (row, col) = harness.cursor_position();
     println!("\nCursor position after movement:");
     println!("  Row: {} (0-based)", row);
@@ -270,7 +270,7 @@ fn example_5_cursor_tracking() -> Result<()> {
 
     // The cursor should be near row 4 (5-1), col 10 (after printing X)
     println!("\nNote: Escape sequences use 1-based indexing,");
-    println!("      but mimic returns 0-based positions.");
+    println!("      but ratatui_testlib returns 0-based positions.");
 
     // Verify the character was placed at the cursor position
     let contents = harness.screen_contents();

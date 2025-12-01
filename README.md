@@ -1,16 +1,16 @@
-# mimic
+# ratatui-testlib
 
 > A Rust library for integration testing of terminal user interface (TUI) applications with first-class support for Ratatui, Bevy ECS integration, and Sixel graphics protocols.
 
 ## Overview
 
-`mimic` bridges the gap between unit testing with Ratatui's `TestBackend` and real-world integration testing of TUI applications. It provides a PTY-based test harness that enables testing of features requiring actual terminal escape sequence processing, including **Sixel graphics position verification**, **Bevy ECS integration**, **bevy_ratatui support**, and complex user interaction flows.
+`ratatui-testlib` bridges the gap between unit testing with Ratatui's `TestBackend` and real-world integration testing of TUI applications. It provides a PTY-based test harness that enables testing of features requiring actual terminal escape sequence processing, including **Sixel graphics position verification**, **Bevy ECS integration**, **bevy_ratatui support**, and complex user interaction flows.
 
 ### MVP Goal
 
 Built to enable comprehensive integration testing for the [**dgx-pixels**](https://github.com/raibid-labs/dgx-pixels) project - a Bevy-based TUI application with Sixel graphics support.
 
-### Why mimic?
+### Why ratatui-testlib?
 
 **Current Limitation**: Ratatui's `TestBackend` is great for unit testing widgets and layouts, but it can't test:
 - PTY-specific behavior (terminal size negotiation, TTY detection)
@@ -19,7 +19,7 @@ Built to enable comprehensive integration testing for the [**dgx-pixels**](https
 - User interaction flows
 - Event handling in actual terminal context
 
-**Solution**: `mimic` runs your TUI application in a real pseudo-terminal (PTY), captures the output using a terminal emulator, and provides an ergonomic API for assertions and snapshot testing.
+**Solution**: `ratatui-testlib` runs your TUI application in a real pseudo-terminal (PTY), captures the output using a terminal emulator, and provides an ergonomic API for assertions and snapshot testing.
 
 ### Key Features
 
@@ -54,7 +54,7 @@ See [ROADMAP.md](./docs/ROADMAP.md) for detailed implementation plan and [DGX_PI
 ## Quick Example
 
 ```rust
-use mimic::TuiTestHarness;
+use ratatui_testlib::TuiTestHarness;
 use std::process::Command;
 
 #[test]
@@ -85,7 +85,7 @@ fn test_navigation() -> Result<()> {
 ## Testing Sixel Graphics (MVP Use Case)
 
 ```rust
-use mimic::BevyTuiTestHarness;
+use ratatui_testlib::BevyTuiTestHarness;
 
 #[tokio::test]
 async fn test_sixel_renders_in_preview_area() -> Result<()> {
@@ -190,16 +190,16 @@ async fn test_sixel_clears_on_screen_change() -> Result<()> {
 | **Testing Strategies** | TESTING_APPROACHES.md | Testing Pyramid, Common Patterns |
 | **Technical Research** | RESEARCH.md | VTE vs vt100, PTY Libraries, Sixel Testing |
 
-## How mimic Complements Existing Tools
+## How ratatui-testlib Complements Existing Tools
 
 | Testing Level | Use This | For What |
 |---------------|----------|----------|
 | **Unit Tests** | Ratatui's TestBackend + insta | Individual widgets, layout calculations |
-| **Integration Tests** | **mimic** | Full app behavior, PTY interaction, graphics |
+| **Integration Tests** | **ratatui-testlib** | Full app behavior, PTY interaction, graphics |
 | **CLI Tests** | assert_cmd | Binary execution, exit codes |
 | **Snapshot Tests** | insta or expect-test | Both unit and integration levels |
 
-`mimic` is **complementary, not competitive** - it fills the integration testing gap that TestBackend cannot address.
+`ratatui-testlib` is **complementary, not competitive** - it fills the integration testing gap that TestBackend cannot address.
 
 ## Project Goals
 
@@ -211,8 +211,8 @@ async fn test_sixel_clears_on_screen_change() -> Result<()> {
 
 ## Comparison with Ratatui's TestBackend
 
-| Feature | TestBackend | mimic |
-|---------|-------------|-----------|
+| Feature | TestBackend | ratatui-testlib |
+|---------|-------------|-----------------|
 | **Speed** | Very Fast | Moderate |
 | **Setup Complexity** | Simple | Moderate |
 | **PTY Testing** | ❌ | ✅ |
@@ -223,7 +223,7 @@ async fn test_sixel_clears_on_screen_change() -> Result<()> {
 | **Async Support** | Basic | Full |
 | **Snapshot Testing** | Via insta/expect | Built-in |
 
-**Recommendation**: Use TestBackend for unit tests, mimic for integration tests.
+**Recommendation**: Use TestBackend for unit tests, ratatui-testlib for integration tests.
 
 ## Architecture Highlights
 
@@ -311,8 +311,8 @@ TBD (likely MIT or MIT/Apache-2.0 dual license)
 
 ## Contact
 
-- **Issues**: [GitHub Issues](https://github.com/[user]/mimic/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/[user]/mimic/discussions)
+- **Issues**: [GitHub Issues](https://github.com/raibid-labs/ratatui-testlib/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/raibid-labs/ratatui-testlib/discussions)
 
 ---
 

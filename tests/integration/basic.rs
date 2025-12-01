@@ -1,4 +1,4 @@
-//! Basic integration tests for mimic.
+//! Basic integration tests for ratatui_testlib.
 
 use term_test::{Result, TuiTestHarness};
 

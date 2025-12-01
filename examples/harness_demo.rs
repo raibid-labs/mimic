@@ -2,7 +2,7 @@
 //!
 //! This example shows how to use the harness for testing TUI applications.
 
-use mimic::{Result, TuiTestHarness};
+use ratatui_testlib::{Result, TuiTestHarness};
 use std::time::Duration;
 
 fn main() -> Result<()> {

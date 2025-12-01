@@ -1,4 +1,4 @@
-//! Demonstration of wait condition patterns in mimic.
+//! Demonstration of wait condition patterns in ratatui_testlib.
 //!
 //! This example shows various wait patterns for testing TUI applications:
 //! - Waiting for text to appear
@@ -11,7 +11,7 @@
 
 use portable_pty::CommandBuilder;
 use std::time::Duration;
-use mimic::{Result, TermTestError, TuiTestHarness};
+use ratatui_testlib::{Result, TermTestError, TuiTestHarness};
 
 fn main() -> Result<()> {
     println!("=== Term-Test Wait Conditions Demo ===\n");

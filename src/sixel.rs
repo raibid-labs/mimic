@@ -24,9 +24,9 @@
 //! ```rust
 //! # #[cfg(feature = "sixel")]
 //! # {
-//! use mimic::{TuiTestHarness, ScreenState};
+//! use ratatui_testlib::{TuiTestHarness, ScreenState};
 //!
-//! # fn test_sixel() -> mimic::Result<()> {
+//! # fn test_sixel() -> ratatui_testlib::Result<()> {
 //! let mut harness = TuiTestHarness::new(80, 24)?;
 //! // ... spawn app and render Sixel graphics ...
 //!
@@ -64,7 +64,7 @@ use crate::error::{Result, TermTestError};
 /// # Example
 ///
 /// ```rust
-/// use mimic::sixel::SixelSequence;
+/// use ratatui_testlib::sixel::SixelSequence;
 ///
 /// let seq = SixelSequence::new(
 ///     vec![/* raw bytes */],
@@ -119,7 +119,7 @@ impl SixelSequence {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::sixel::SixelSequence;
+    /// use ratatui_testlib::sixel::SixelSequence;
     ///
     /// let seq = SixelSequence::new(vec![], (5, 5), (5, 5, 10, 10));
     /// let area = (0, 0, 20, 20);
@@ -156,7 +156,7 @@ impl SixelSequence {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::sixel::SixelSequence;
+    /// use ratatui_testlib::sixel::SixelSequence;
     ///
     /// let seq = SixelSequence::new(vec![], (5, 5), (5, 5, 10, 10));
     ///
@@ -190,10 +190,10 @@ impl SixelSequence {
 /// ```rust
 /// # #[cfg(feature = "sixel")]
 /// # {
-/// use mimic::sixel::SixelCapture;
-/// use mimic::ScreenState;
+/// use ratatui_testlib::sixel::SixelCapture;
+/// use ratatui_testlib::ScreenState;
 ///
-/// # fn test() -> mimic::Result<()> {
+/// # fn test() -> ratatui_testlib::Result<()> {
 /// let screen = ScreenState::new(80, 24);
 /// let capture = SixelCapture::from_screen_state(&screen);
 ///
@@ -220,7 +220,7 @@ impl SixelCapture {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::sixel::SixelCapture;
+    /// use ratatui_testlib::sixel::SixelCapture;
     ///
     /// let capture = SixelCapture::new();
     /// assert!(capture.is_empty());
@@ -304,7 +304,7 @@ impl SixelCapture {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::sixel::SixelCapture;
+    /// use ratatui_testlib::sixel::SixelCapture;
     ///
     /// let capture = SixelCapture::new();
     /// let sequences = capture.sequences();
@@ -323,7 +323,7 @@ impl SixelCapture {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::sixel::SixelCapture;
+    /// use ratatui_testlib::sixel::SixelCapture;
     ///
     /// let capture = SixelCapture::new();
     /// assert!(capture.is_empty());
@@ -348,7 +348,7 @@ impl SixelCapture {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::sixel::SixelCapture;
+    /// use ratatui_testlib::sixel::SixelCapture;
     ///
     /// let capture = SixelCapture::new();
     /// let preview_area = (5, 5, 30, 20);
@@ -378,7 +378,7 @@ impl SixelCapture {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::sixel::SixelCapture;
+    /// use ratatui_testlib::sixel::SixelCapture;
     ///
     /// let capture = SixelCapture::new();
     /// let preview_area = (5, 5, 30, 20);
@@ -431,8 +431,8 @@ impl SixelCapture {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::sixel::SixelCapture;
-    /// use mimic::ScreenState;
+    /// use ratatui_testlib::sixel::SixelCapture;
+    /// use ratatui_testlib::ScreenState;
     ///
     /// let screen1 = ScreenState::new(80, 24);
     /// let capture1 = SixelCapture::from_screen_state(&screen1);

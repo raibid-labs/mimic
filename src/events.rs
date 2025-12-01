@@ -13,7 +13,7 @@
 //! # Example
 //!
 //! ```rust
-//! use mimic::events::{KeyCode, Modifiers, KeyEvent};
+//! use ratatui_testlib::events::{KeyCode, Modifiers, KeyEvent};
 //!
 //! // Simple key
 //! let key = KeyEvent::new(KeyCode::Char('a'));
@@ -42,7 +42,7 @@ use bitflags::bitflags;
 /// # Example
 ///
 /// ```rust
-/// use mimic::events::KeyCode;
+/// use ratatui_testlib::events::KeyCode;
 ///
 /// let letter = KeyCode::Char('a');
 /// let enter = KeyCode::Enter;
@@ -101,7 +101,7 @@ pub enum KeyCode {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::events::KeyCode;
+    /// use ratatui_testlib::events::KeyCode;
     ///
     /// let f1 = KeyCode::F(1);
     /// let f12 = KeyCode::F(12);
@@ -115,7 +115,7 @@ bitflags! {
     /// These are bitflags, so multiple modifiers can be combined:
     ///
     /// ```rust
-    /// use mimic::events::Modifiers;
+    /// use ratatui_testlib::events::Modifiers;
     ///
     /// let ctrl_shift = Modifiers::CTRL | Modifiers::SHIFT;
     /// let ctrl_alt = Modifiers::CTRL | Modifiers::ALT;
@@ -141,7 +141,7 @@ bitflags! {
 /// # Example
 ///
 /// ```rust
-/// use mimic::events::{KeyCode, Modifiers, KeyEvent};
+/// use ratatui_testlib::events::{KeyCode, Modifiers, KeyEvent};
 ///
 /// // Simple key press
 /// let key = KeyEvent::new(KeyCode::Char('a'));
@@ -170,7 +170,7 @@ impl KeyEvent {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::events::{KeyCode, KeyEvent};
+    /// use ratatui_testlib::events::{KeyCode, KeyEvent};
     ///
     /// let key = KeyEvent::new(KeyCode::Char('a'));
     /// ```
@@ -186,7 +186,7 @@ impl KeyEvent {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::events::{KeyCode, Modifiers, KeyEvent};
+    /// use ratatui_testlib::events::{KeyCode, Modifiers, KeyEvent};
     ///
     /// let ctrl_c = KeyEvent::with_modifiers(
     ///     KeyCode::Char('c'),
@@ -209,7 +209,7 @@ impl KeyEvent {
     /// # Example
     ///
     /// ```rust
-    /// use mimic::events::{KeyCode, Modifiers, KeyEvent};
+    /// use ratatui_testlib::events::{KeyCode, Modifiers, KeyEvent};
     ///
     /// let key = KeyEvent::new(KeyCode::Char('a'));
     /// let bytes = key.to_bytes();

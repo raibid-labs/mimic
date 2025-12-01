@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**mimic** is a Rust library for integration testing of terminal user interface (TUI) applications, particularly those built with Ratatui. The library enables testing features that require actual terminal escape sequence processing, including Sixel image rendering, which cannot be tested with Ratatui's built-in `TestBackend`.
+**ratatui-testlib** is a Rust library for integration testing of terminal user interface (TUI) applications, particularly those built with Ratatui. The library enables testing features that require actual terminal escape sequence processing, including Sixel image rendering, which cannot be tested with Ratatui's built-in `TestBackend`.
 
 ## Project Genesis
 
@@ -179,11 +179,11 @@ Created comprehensive documentation:
 
 ### 4. Complementary, Not Competitive
 
-**Decision**: Position mimic as complementary to TestBackend
+**Decision**: Position ratatui-testlib as complementary to TestBackend
 
 **Rationale**:
 - TestBackend is excellent for unit tests
-- mimic fills the integration testing gap
+- ratatui-testlib fills the integration testing gap
 - Different tools for different jobs
 - Reduces adoption friction
 
@@ -199,7 +199,7 @@ Created comprehensive documentation:
 
 ## Gap Analysis: What Was Missing
 
-Before mimic, the Ratatui testing ecosystem had these gaps:
+Before ratatui-testlib, the Ratatui testing ecosystem had these gaps:
 
 1. **No PTY-based integration testing** - TestBackend is in-memory only
 2. **No graphics protocol testing** - Sixel rendering untestable
@@ -207,7 +207,7 @@ Before mimic, the Ratatui testing ecosystem had these gaps:
 4. **No full E2E testing** - Can't test complete user flows
 5. **Limited async support** - No async-aware test harness
 
-mimic addresses all of these gaps.
+ratatui-testlib addresses all of these gaps.
 
 ## Technical Challenges Identified
 
@@ -462,7 +462,7 @@ Structured documentation to serve multiple audiences:
 
 ## Conclusion
 
-This session completed the research and design phase for mimic. The library has a clear purpose (integration testing for Ratatui TUIs), a well-defined architecture (5 layers), comprehensive documentation (>20,000 words), and a concrete roadmap (8 phases to 1.0).
+This session completed the research and design phase for ratatui-testlib. The library has a clear purpose (integration testing for Ratatui TUIs), a well-defined architecture (5 layers), comprehensive documentation (>20,000 words), and a concrete roadmap (8 phases to 1.0).
 
 The next session should focus on:
 1. Setting up the Rust project structure

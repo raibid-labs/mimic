@@ -2,7 +2,7 @@
 
 ## Overview
 
-The enhanced `TuiTestHarness` is now complete with robust waiting mechanisms, cursor tracking, and a builder pattern. This document provides integration guidance for using the harness with other components of the mimic project.
+The enhanced `TuiTestHarness` is now complete with robust waiting mechanisms, cursor tracking, and a builder pattern. This document provides integration guidance for using the harness with other components of the ratatui-testlib project.
 
 ## Quick Start
 

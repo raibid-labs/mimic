@@ -1,7 +1,7 @@
 //! Async/Tokio testing example.
 //!
 //! This example demonstrates async testing patterns with Tokio runtime:
-//! - Using mimic in async contexts
+//! - Using ratatui_testlib in async contexts
 //! - Integrating with Tokio async/await
 //! - Testing async TUI applications
 //! - Combining async I/O with terminal testing
@@ -21,7 +21,7 @@
 //! - Network communication
 //! - Event-driven architectures
 //!
-//! mimic's sync API works well with async runtimes by allowing you to:
+//! ratatui_testlib's sync API works well with async runtimes by allowing you to:
 //! - Wrap sync operations in async functions
 //! - Use tokio::time for delays instead of std::thread::sleep
 //! - Integrate with other async libraries
@@ -43,7 +43,7 @@
 //! 5. Practical async patterns
 
 use portable_pty::CommandBuilder;
-use mimic::{Result, TuiTestHarness};
+use ratatui_testlib::{Result, TuiTestHarness};
 use tokio::time::{timeout, Duration};
 
 #[tokio::main]
@@ -146,7 +146,7 @@ async fn example_2_async_wait() -> Result<()> {
         }
 
         if start.elapsed() > Duration::from_secs(5) {
-            return Err(mimic::TermTestError::Timeout { timeout_ms: 5000 });
+            return Err(ratatui_testlib::TermTestError::Timeout { timeout_ms: 5000 });
         }
 
         tokio::time::sleep(Duration::from_millis(50)).await;
@@ -179,7 +179,7 @@ async fn example_3_concurrent_operations() -> Result<()> {
         tokio::time::sleep(Duration::from_millis(100)).await;
         harness.update_state()?;
         let result = harness.screen_contents().contains("Task 1");
-        Ok::<bool, mimic::TermTestError>(result)
+        Ok::<bool, ratatui_testlib::TermTestError>(result)
     };
 
     let task2 = async {
@@ -190,7 +190,7 @@ async fn example_3_concurrent_operations() -> Result<()> {
         tokio::time::sleep(Duration::from_millis(100)).await;
         harness.update_state()?;
         let result = harness.screen_contents().contains("Task 2");
-        Ok::<bool, mimic::TermTestError>(result)
+        Ok::<bool, ratatui_testlib::TermTestError>(result)
     };
 
     let task3 = async {
@@ -201,7 +201,7 @@ async fn example_3_concurrent_operations() -> Result<()> {
         tokio::time::sleep(Duration::from_millis(100)).await;
         harness.update_state()?;
         let result = harness.screen_contents().contains("Task 3");
-        Ok::<bool, mimic::TermTestError>(result)
+        Ok::<bool, ratatui_testlib::TermTestError>(result)
     };
 
     // Run all tasks concurrently
@@ -239,7 +239,7 @@ async fn example_4_timeout_handling() -> Result<()> {
         tokio::time::sleep(Duration::from_millis(100)).await;
         harness.update_state()?;
         let contents = harness.screen_contents();
-        Ok::<String, mimic::TermTestError>(contents)
+        Ok::<String, ratatui_testlib::TermTestError>(contents)
     })
     .await;
 
@@ -260,7 +260,7 @@ async fn example_4_timeout_handling() -> Result<()> {
         cmd.arg("1");
         harness.spawn(cmd)?;
         tokio::time::sleep(Duration::from_secs(2)).await;
-        Ok::<(), mimic::TermTestError>(())
+        Ok::<(), ratatui_testlib::TermTestError>(())
     })
     .await;
 
@@ -317,7 +317,7 @@ async fn example_5_practical_scenario() -> Result<()> {
             }
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
-        Ok::<(), mimic::TermTestError>(())
+        Ok::<(), ratatui_testlib::TermTestError>(())
     })
     .await;
 
@@ -336,7 +336,7 @@ async fn example_5_practical_scenario() -> Result<()> {
             }
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
-        Ok::<(), mimic::TermTestError>(())
+        Ok::<(), ratatui_testlib::TermTestError>(())
     })
     .await;
 
@@ -396,7 +396,7 @@ async fn example_5_practical_scenario() -> Result<()> {
 //                 }
 //                 tokio::time::sleep(Duration::from_millis(50)).await;
 //             }
-//             Ok::<(), mimic::TermTestError>(())
+//             Ok::<(), ratatui_testlib::TermTestError>(())
 //         })
 //         .await??;
 //
@@ -423,7 +423,7 @@ async fn example_5_practical_scenario() -> Result<()> {
 //                 harness.spawn(cmd)?;
 //                 tokio::time::sleep(Duration::from_millis(100)).await;
 //                 harness.update_state()?;
-//                 Ok::<_, mimic::TermTestError>(())
+//                 Ok::<_, ratatui_testlib::TermTestError>(())
 //             })
 //         });
 //

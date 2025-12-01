@@ -1,6 +1,6 @@
 //! Snapshot testing example using insta.
 //!
-//! This example demonstrates how to use mimic with the insta snapshot testing library
+//! This example demonstrates how to use ratatui_testlib with the insta snapshot testing library
 //! for visual regression testing of TUI applications:
 //! - Capturing terminal output as snapshots
 //! - Using insta for snapshot comparison
@@ -37,7 +37,7 @@
 //! 5. Best practices and common patterns
 
 use portable_pty::CommandBuilder;
-use mimic::{Result, TuiTestHarness};
+use ratatui_testlib::{Result, TuiTestHarness};
 use std::time::Duration;
 
 fn main() -> Result<()> {

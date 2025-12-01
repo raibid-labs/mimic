@@ -1,4 +1,4 @@
-//! Error types for mimic.
+//! Error types for ratatui_testlib.
 //!
 //! This module defines all error types that can occur during TUI testing operations.
 //! The main error type [`TermTestError`] is an enum covering all possible failure modes,
@@ -7,7 +7,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use mimic::{Result, TermTestError};
+//! use ratatui_testlib::{Result, TermTestError};
 //!
 //! fn may_fail() -> Result<()> {
 //!     Err(TermTestError::Timeout { timeout_ms: 5000 })
@@ -25,7 +25,7 @@
 use std::io;
 use thiserror::Error;
 
-/// Result type alias for mimic operations.
+/// Result type alias for ratatui_testlib operations.
 ///
 /// This is a convenience alias for `std::result::Result<T, TermTestError>`.
 /// Most public APIs in this crate return this type.
@@ -33,7 +33,7 @@ use thiserror::Error;
 /// # Examples
 ///
 /// ```rust
-/// use mimic::{Result, TuiTestHarness};
+/// use ratatui_testlib::{Result, TuiTestHarness};
 ///
 /// fn create_harness() -> Result<TuiTestHarness> {
 ///     TuiTestHarness::new(80, 24)
@@ -43,7 +43,7 @@ pub type Result<T> = std::result::Result<T, TermTestError>;
 
 /// Errors that can occur during TUI testing.
 ///
-/// This enum represents all possible error conditions in the mimic library.
+/// This enum represents all possible error conditions in the ratatui_testlib library.
 /// Each variant provides specific context about the failure.
 ///
 /// # Variants
@@ -86,10 +86,10 @@ pub enum TermTestError {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use mimic::{TuiTestHarness, TermTestError};
+    /// use ratatui_testlib::{TuiTestHarness, TermTestError};
     /// use std::time::Duration;
     ///
-    /// # fn test() -> mimic::Result<()> {
+    /// # fn test() -> ratatui_testlib::Result<()> {
     /// let mut harness = TuiTestHarness::new(80, 24)?
     ///     .with_timeout(Duration::from_secs(1));
     ///

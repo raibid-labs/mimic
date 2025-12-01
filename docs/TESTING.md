@@ -1,6 +1,6 @@
-# Testing Guide for mimic
+# Testing Guide for ratatui-testlib
 
-This document describes the test architecture and patterns used in mimic.
+This document describes the test architecture and patterns used in ratatui-testlib.
 
 ## Test Organization
 

@@ -1,6 +1,6 @@
 # CI/CD Pipeline Verification - Complete Documentation
 
-This directory contains comprehensive analysis and recommendations for the GitHub Actions CI/CD pipeline used by the mimic project.
+This directory contains comprehensive analysis and recommendations for the GitHub Actions CI/CD pipeline used by the ratatui-testlib project.
 
 ## Quick Navigation
 
@@ -194,7 +194,7 @@ After implementing changes, verify:
 
 ## File Locations
 
-All verification documents are in: `/home/beengud/raibid-labs/mimic/`
+All verification documents are in: `/home/beengud/raibid-labs/ratatui-testlib/`
 
 ### Documentation Files
 - `CI_VERIFICATION_COMPLETE.txt` - Sign-off document

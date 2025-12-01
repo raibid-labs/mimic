@@ -239,10 +239,10 @@ act -j test
 ## CI Badge for README
 
 ```markdown
-[![CI](https://github.com/raibid-labs/mimic/workflows/CI/badge.svg)](https://github.com/raibid-labs/mimic/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/raibid-labs/mimic/branch/main/graph/badge.svg)](https://codecov.io/gh/raibid-labs/mimic)
-[![Crates.io](https://img.shields.io/crates/v/mimic.svg)](https://crates.io/crates/mimic)
-[![Documentation](https://docs.rs/mimic/badge.svg)](https://docs.rs/mimic)
+[![CI](https://github.com/raibid-labs/ratatui-testlib/workflows/CI/badge.svg)](https://github.com/raibid-labs/ratatui-testlib/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/raibid-labs/ratatui-testlib/branch/main/graph/badge.svg)](https://codecov.io/gh/raibid-labs/ratatui-testlib)
+[![Crates.io](https://img.shields.io/crates/v/ratatui-testlib.svg)](https://crates.io/crates/ratatui-testlib)
+[![Documentation](https://docs.rs/ratatui-testlib/badge.svg)](https://docs.rs/ratatui-testlib)
 ```
 
 ## Performance Targets
@@ -258,8 +258,8 @@ act -j test
 
 - [CI Workflow](../.github/workflows/ci.yml)
 - [Dependabot Config](../.github/dependabot.yml)
-- [Codecov Dashboard](https://codecov.io/gh/raibid-labs/mimic)
-- [GitHub Actions](https://github.com/raibid-labs/mimic/actions)
+- [Codecov Dashboard](https://codecov.io/gh/raibid-labs/ratatui-testlib)
+- [GitHub Actions](https://github.com/raibid-labs/ratatui-testlib/actions)
 
 ---
 
