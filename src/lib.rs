@@ -116,10 +116,10 @@ mod pty;
 mod screen;
 
 #[cfg(feature = "sixel")]
-mod sixel;
+pub mod sixel;
 
 #[cfg(feature = "bevy")]
-mod bevy;
+pub mod bevy;
 
 // Public API exports
 pub use error::{Result, TermTestError};
