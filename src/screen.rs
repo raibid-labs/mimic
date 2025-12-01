@@ -29,6 +29,42 @@
 
 use vtparse::{VTActor, VTParser, CsiParam};
 
+/// Represents a single terminal cell with character and attributes.
+///
+/// This struct tracks the complete state of a terminal cell including:
+/// - The character being displayed
+/// - Foreground color (ANSI color code, 0-255, or None for default)
+/// - Background color (ANSI color code, 0-255, or None for default)
+/// - Text attributes (bold, italic, underline, etc.)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Cell {
+    /// The character displayed in this cell
+    pub c: char,
+    /// Foreground color (None = default, Some(0-255) = ANSI color)
+    pub fg: Option<u8>,
+    /// Background color (None = default, Some(0-255) = ANSI color)
+    pub bg: Option<u8>,
+    /// Bold attribute
+    pub bold: bool,
+    /// Italic attribute
+    pub italic: bool,
+    /// Underline attribute
+    pub underline: bool,
+}
+
+impl Default for Cell {
+    fn default() -> Self {
+        Self {
+            c: ' ',
+            fg: None,
+            bg: None,
+            bold: false,
+            italic: false,
+            underline: false,
+        }
+    }
+}
+
 /// Represents a Sixel graphics region in the terminal.
 ///
 /// Sixel is a bitmap graphics format used by terminals to display images.
@@ -83,12 +119,18 @@ struct TerminalState {
     in_sixel_mode: bool,
     width: u16,
     height: u16,
-    cells: Vec<Vec<char>>,
+    cells: Vec<Vec<Cell>>,
+    /// Current text attributes (for SGR sequences)
+    current_fg: Option<u8>,
+    current_bg: Option<u8>,
+    current_bold: bool,
+    current_italic: bool,
+    current_underline: bool,
 }
 
 impl TerminalState {
     fn new(width: u16, height: u16) -> Self {
-        let cells = vec![vec![' '; width as usize]; height as usize];
+        let cells = vec![vec![Cell::default(); width as usize]; height as usize];
 
         Self {
             cursor_pos: (0, 0),
@@ -99,13 +141,25 @@ impl TerminalState {
             width,
             height,
             cells,
+            current_fg: None,
+            current_bg: None,
+            current_bold: false,
+            current_italic: false,
+            current_underline: false,
         }
     }
 
     fn put_char(&mut self, ch: char) {
         let (row, col) = self.cursor_pos;
         if row < self.height && col < self.width {
-            self.cells[row as usize][col as usize] = ch;
+            self.cells[row as usize][col as usize] = Cell {
+                c: ch,
+                fg: self.current_fg,
+                bg: self.current_bg,
+                bold: self.current_bold,
+                italic: self.current_italic,
+                underline: self.current_underline,
+            };
             // Move cursor forward, but don't wrap automatically
             if col + 1 < self.width {
                 self.cursor_pos.1 = col + 1;
@@ -358,6 +412,65 @@ impl VTActor for TerminalState {
                     .unwrap_or(1) as u16;
                 self.cursor_pos.1 = self.cursor_pos.1.saturating_sub(n);
             }
+            b'm' => {
+                // SGR - Select Graphic Rendition (colors and attributes)
+                let integers: Vec<i64> = params
+                    .iter()
+                    .filter_map(|p| p.as_integer())
+                    .collect();
+
+                // Handle empty params (reset)
+                if integers.is_empty() {
+                    self.current_fg = None;
+                    self.current_bg = None;
+                    self.current_bold = false;
+                    self.current_italic = false;
+                    self.current_underline = false;
+                    return;
+                }
+
+                let mut i = 0;
+                while i < integers.len() {
+                    match integers[i] {
+                        0 => {
+                            // Reset all attributes
+                            self.current_fg = None;
+                            self.current_bg = None;
+                            self.current_bold = false;
+                            self.current_italic = false;
+                            self.current_underline = false;
+                        }
+                        1 => self.current_bold = true,
+                        3 => self.current_italic = true,
+                        4 => self.current_underline = true,
+                        22 => self.current_bold = false,
+                        23 => self.current_italic = false,
+                        24 => self.current_underline = false,
+                        // Foreground colors (30-37: standard, 90-97: bright)
+                        30..=37 => self.current_fg = Some((integers[i] - 30) as u8),
+                        90..=97 => self.current_fg = Some((integers[i] - 90 + 8) as u8),
+                        39 => self.current_fg = None, // Default foreground
+                        // Background colors (40-47: standard, 100-107: bright)
+                        40..=47 => self.current_bg = Some((integers[i] - 40) as u8),
+                        100..=107 => self.current_bg = Some((integers[i] - 100 + 8) as u8),
+                        49 => self.current_bg = None, // Default background
+                        // 256-color mode: ESC[38;5;N or ESC[48;5;N
+                        38 | 48 => {
+                            if i + 2 < integers.len() && integers[i + 1] == 5 {
+                                let color = integers[i + 2] as u8;
+                                if integers[i] == 38 {
+                                    self.current_fg = Some(color);
+                                } else {
+                                    self.current_bg = Some(color);
+                                }
+                                i += 2; // Skip the '5' and color value
+                            }
+                        }
+                        _ => {} // Ignore unknown SGR codes
+                    }
+                    i += 1;
+                }
+            }
             _ => {}
         }
     }
@@ -529,7 +642,7 @@ impl ScreenState {
         self.state
             .cells
             .iter()
-            .map(|row| row.iter().collect::<String>())
+            .map(|row| row.iter().map(|cell| cell.c).collect::<String>())
             .collect::<Vec<_>>()
             .join("\n")
     }
@@ -545,7 +658,7 @@ impl ScreenState {
     /// The row contents as a string, or empty string if row is out of bounds.
     pub fn row_contents(&self, row: u16) -> String {
         if row < self.height {
-            self.state.cells[row as usize].iter().collect()
+            self.state.cells[row as usize].iter().map(|cell| cell.c).collect()
         } else {
             String::new()
         }
@@ -563,7 +676,42 @@ impl ScreenState {
     /// The character at the position, or None if out of bounds.
     pub fn text_at(&self, row: u16, col: u16) -> Option<char> {
         if row < self.height && col < self.width {
-            Some(self.state.cells[row as usize][col as usize])
+            Some(self.state.cells[row as usize][col as usize].c)
+        } else {
+            None
+        }
+    }
+
+    /// Returns the complete cell (character + attributes) at a specific position.
+    ///
+    /// This method provides access to the full cell state including colors and
+    /// text attributes, enabling verification of ANSI escape sequence handling.
+    ///
+    /// # Arguments
+    ///
+    /// * `row` - Row index (0-based)
+    /// * `col` - Column index (0-based)
+    ///
+    /// # Returns
+    ///
+    /// A reference to the cell, or None if out of bounds.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use term_test::ScreenState;
+    ///
+    /// let mut screen = ScreenState::new(80, 24);
+    /// screen.feed(b"\x1b[31mRed\x1b[0m");
+    ///
+    /// if let Some(cell) = screen.get_cell(0, 0) {
+    ///     assert_eq!(cell.c, 'R');
+    ///     assert_eq!(cell.fg, Some(1)); // Red = color 1
+    /// }
+    /// ```
+    pub fn get_cell(&self, row: u16, col: u16) -> Option<&Cell> {
+        if row < self.height && col < self.width {
+            Some(&self.state.cells[row as usize][col as usize])
         } else {
             None
         }

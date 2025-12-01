@@ -126,7 +126,7 @@ pub use error::{Result, TermTestError};
 pub use events::{KeyCode, KeyEvent, Modifiers};
 pub use harness::TuiTestHarness;
 pub use pty::TestTerminal;
-pub use screen::{ScreenState, SixelRegion};
+pub use screen::{Cell, ScreenState, SixelRegion};
 
 #[cfg(feature = "sixel")]
 pub use sixel::{SixelCapture, SixelSequence};
