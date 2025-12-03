@@ -19,8 +19,8 @@
 //! ### PTY-Based Testing (Full TUI Applications)
 //!
 //! ```rust,no_run
-//! use ratatui_testlib::{TuiTestHarness, Result};
 //! use portable_pty::CommandBuilder;
+//! use ratatui_testlib::{Result, TuiTestHarness};
 //!
 //! #[test]
 //! fn test_my_tui_app() -> Result<()> {
@@ -32,9 +32,7 @@
 //!     harness.spawn(cmd)?;
 //!
 //!     // Wait for initial render
-//!     harness.wait_for(|state| {
-//!         state.contents().contains("Welcome")
-//!     })?;
+//!     harness.wait_for(|state| state.contents().contains("Welcome"))?;
 //!
 //!     // Send keyboard input
 //!     harness.send_text("hello")?;
@@ -153,9 +151,12 @@
 
 mod error;
 pub mod events;
+pub mod golden;
 mod harness;
+pub mod parallel;
 mod pty;
 mod screen;
+pub mod terminal_profiles;
 
 #[cfg(feature = "sixel")]
 pub mod sixel;
@@ -165,10 +166,17 @@ pub mod bevy;
 
 // Public API exports
 pub use error::{Result, TermTestError};
-pub use events::{KeyCode, KeyEvent, Modifiers};
-pub use harness::{Axis, TuiTestHarness};
+pub use events::{KeyCode, KeyEvent, Modifiers, MouseButton, MouseEvent, ScrollDirection};
+pub use golden::{GoldenFile, GoldenMetadata};
+pub use harness::{Axis, MemoryResults, RecordedEvent, TuiTestHarness};
+pub use parallel::{
+    IsolatedTerminal, PoolConfig, PoolStats, TerminalGuard, TerminalId, TerminalPool, TestContext,
+};
 pub use pty::TestTerminal;
 pub use screen::{Cell, GridSnapshot, Rect, ScreenState, SixelRegion};
+pub use terminal_profiles::{
+    ColorDepth, Feature, MouseProtocol, TerminalCapabilities, TerminalProfile,
+};
 
 /// Re-export of [`ScreenState`] for clarity in stream-based parsing contexts.
 ///
@@ -179,22 +187,18 @@ pub use screen::{Cell, GridSnapshot, Rect, ScreenState, SixelRegion};
 ///
 /// ```rust
 /// // Both of these are equivalent:
-/// use ratatui_testlib::ScreenState;
-/// use ratatui_testlib::Parser; // Clearer name for stream-based usage
+/// use ratatui_testlib::{Parser, ScreenState}; // Clearer name for stream-based usage
 ///
 /// let mut screen = ScreenState::new(80, 24);
 /// let mut parser = Parser::new(80, 24);
 /// ```
 pub type Parser = ScreenState;
 
-#[cfg(feature = "sixel")]
-pub use sixel::{SixelCapture, SixelSequence};
-
-#[cfg(feature = "bevy")]
-pub use bevy::{BevyTuiTestHarness, HeadlessBevyRunner};
-
 #[cfg(all(feature = "bevy", feature = "snapshot-insta"))]
 pub use bevy::ComponentSnapshot;
-
+#[cfg(feature = "bevy")]
+pub use bevy::{BevyTuiTestHarness, HeadlessBevyRunner};
 // Re-export commonly used types for convenience
 pub use portable_pty::CommandBuilder;
+#[cfg(feature = "sixel")]
+pub use sixel::{SixelCapture, SixelSequence};

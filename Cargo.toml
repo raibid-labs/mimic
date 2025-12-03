@@ -18,6 +18,8 @@ vtparse = "0.7"
 thiserror = "2.0"
 anyhow = "1.0"
 bitflags = "2.4"
+similar = "2.3"
+chrono = "0.4"
 
 # MVP dependencies (feature-gated)
 tokio = { version = "1.35", optional = true, features = ["full"] }
@@ -112,6 +114,11 @@ required-features = ["bevy"]
 name = "benchmark_test"
 path = "examples/benchmark_test.rs"
 required-features = ["bevy"]
+
+[[example]]
+name = "terminal_profiles_demo"
+path = "examples/terminal_profiles_demo.rs"
+required-features = ["sixel"]
 
 [profile.dev]
 opt-level = 0
