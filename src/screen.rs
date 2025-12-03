@@ -9,22 +9,64 @@
 //! - [`ScreenState`]: The main screen state tracking type
 //! - [`SixelRegion`]: Represents a Sixel graphics region with position and dimension info
 //!
-//! # Example
+//! # Usage Modes
+//!
+//! ## 1. Stream-Based Parsing (Zero PTY Overhead)
+//!
+//! [`ScreenState`] can be used as a headless parser for terminal emulator testing.
+//! This is ideal for integration testing where you need to verify terminal behavior
+//! against deterministic byte sequences.
 //!
 //! ```rust
 //! use ratatui_testlib::ScreenState;
 //!
+//! // Create a parser without any PTY
 //! let mut screen = ScreenState::new(80, 24);
 //!
-//! // Feed terminal output
-//! screen.feed(b"Hello, World!");
+//! // Feed raw byte sequences directly
+//! let input = b"\x1b[31mHello\x1b[0m";
+//! screen.feed(input);
 //!
-//! // Query screen contents
+//! // Query the parsed state
 //! assert!(screen.contains("Hello"));
-//! assert_eq!(screen.cursor_position(), (0, 13));
+//! assert_eq!(screen.get_cell(0, 0).unwrap().fg, Some(1)); // Red color
+//! ```
 //!
-//! // Check specific position
-//! assert_eq!(screen.text_at(0, 0), Some('H'));
+//! ## 2. PTY-Based Testing (Full TUI Integration)
+//!
+//! For testing complete TUI applications, use [`crate::TuiTestHarness`] which
+//! combines [`ScreenState`] with PTY management.
+//!
+//! ```rust,no_run
+//! use ratatui_testlib::TuiTestHarness;
+//! use portable_pty::CommandBuilder;
+//!
+//! let mut harness = TuiTestHarness::new(80, 24)?;
+//! let cmd = CommandBuilder::new("my-tui-app");
+//! harness.spawn(cmd)?;
+//! harness.wait_for_text("Welcome")?;
+//! # Ok::<(), ratatui_testlib::TermTestError>(())
+//! ```
+//!
+//! # Example: Verification Oracle
+//!
+//! Use [`ScreenState`] as a reference implementation to verify other terminal emulators:
+//!
+//! ```rust
+//! use ratatui_testlib::ScreenState;
+//!
+//! // Define a deterministic test sequence
+//! let test_sequence = b"\x1b[2J\x1b[H\x1b[31mTest\x1b[0m";
+//!
+//! // Create oracle
+//! let mut oracle = ScreenState::new(80, 24);
+//! oracle.feed(test_sequence);
+//!
+//! // Now compare your system-under-test against the oracle:
+//! // - Text: oracle.contents()
+//! // - Cursor: oracle.cursor_position()
+//! // - Attributes: oracle.get_cell(row, col)
+//! // - Sixel regions: oracle.sixel_regions()
 //! ```
 
 use vtparse::{VTActor, VTParser, CsiParam};
@@ -62,6 +104,103 @@ impl Default for Cell {
             italic: false,
             underline: false,
         }
+    }
+}
+
+/// A rectangular area in terminal coordinate space.
+///
+/// Represents a rectangular region with a position and size. This is compatible
+/// with `ratatui::layout::Rect` and is used for position assertions and bounds
+/// checking.
+///
+/// # Coordinate System
+///
+/// - Positions are 0-indexed
+/// - `x` is the column (horizontal position)
+/// - `y` is the row (vertical position)
+/// - `width` and `height` define the area dimensions
+///
+/// # Example
+///
+/// ```rust
+/// use ratatui_testlib::Rect;
+///
+/// // Create a rectangle at (5, 10) with size 30x20
+/// let rect = Rect::new(5, 10, 30, 20);
+/// assert_eq!(rect.x, 5);
+/// assert_eq!(rect.y, 10);
+/// assert_eq!(rect.width, 30);
+/// assert_eq!(rect.height, 20);
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct Rect {
+    /// X coordinate (column, 0-indexed).
+    pub x: u16,
+    /// Y coordinate (row, 0-indexed).
+    pub y: u16,
+    /// Width in columns.
+    pub width: u16,
+    /// Height in rows.
+    pub height: u16,
+}
+
+impl Rect {
+    /// Creates a new rectangle with the given position and size.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - X coordinate (column, 0-indexed)
+    /// * `y` - Y coordinate (row, 0-indexed)
+    /// * `width` - Width in columns
+    /// * `height` - Height in rows
+    pub const fn new(x: u16, y: u16, width: u16, height: u16) -> Self {
+        Self { x, y, width, height }
+    }
+
+    /// Returns the right edge (x + width).
+    #[inline]
+    pub const fn right(&self) -> u16 {
+        self.x.saturating_add(self.width)
+    }
+
+    /// Returns the bottom edge (y + height).
+    #[inline]
+    pub const fn bottom(&self) -> u16 {
+        self.y.saturating_add(self.height)
+    }
+
+    /// Checks if this rectangle contains the given point.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - X coordinate (column)
+    /// * `y` - Y coordinate (row)
+    pub const fn contains(&self, x: u16, y: u16) -> bool {
+        x >= self.x && x < self.right() && y >= self.y && y < self.bottom()
+    }
+
+    /// Checks if this rectangle completely contains another rectangle.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The rectangle to check
+    pub const fn contains_rect(&self, other: &Rect) -> bool {
+        other.x >= self.x
+            && other.y >= self.y
+            && other.right() <= self.right()
+            && other.bottom() <= self.bottom()
+    }
+
+    /// Checks if this rectangle intersects with another rectangle.
+    ///
+    /// # Arguments
+    ///
+    /// * `other` - The rectangle to check for intersection
+    pub const fn intersects(&self, other: &Rect) -> bool {
+        self.x < other.right()
+            && self.right() > other.x
+            && self.y < other.bottom()
+            && self.bottom() > other.y
     }
 }
 
@@ -106,6 +245,51 @@ pub struct SixelRegion {
     pub height: u32,
     /// Raw Sixel escape sequence data.
     pub data: Vec<u8>,
+}
+
+/// A complete snapshot of the terminal screen grid state.
+///
+/// This structure provides a point-in-time capture of the entire screen state,
+/// including all cells with their characters and attributes, the cursor position,
+/// and grid dimensions. It's designed for deep comparison between terminal
+/// emulators or for serialization/debugging purposes.
+///
+/// # Fields
+///
+/// - `width`: Screen width in columns
+/// - `height`: Screen height in rows
+/// - `cells`: 2D vector of cells (row-major order: `cells[row][col]`)
+/// - `cursor`: Current cursor position as (row, col), both 0-indexed
+///
+/// # Example
+///
+/// ```rust
+/// use ratatui_testlib::ScreenState;
+///
+/// let mut screen = ScreenState::new(80, 24);
+/// screen.feed(b"\x1b[31mTest");
+///
+/// let snapshot = screen.snapshot();
+///
+/// // Compare against another emulator
+/// for row in 0..snapshot.height {
+///     for col in 0..snapshot.width {
+///         let cell = &snapshot.cells[row as usize][col as usize];
+///         println!("({}, {}): '{}' fg={:?} bg={:?}",
+///             row, col, cell.c, cell.fg, cell.bg);
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GridSnapshot {
+    /// Screen width in columns.
+    pub width: u16,
+    /// Screen height in rows.
+    pub height: u16,
+    /// Complete grid of cells in row-major order: `cells[row][col]`.
+    pub cells: Vec<Vec<Cell>>,
+    /// Cursor position as (row, col), both 0-indexed.
+    pub cursor: (u16, u16),
 }
 
 /// Terminal state tracking for vtparse parser.
@@ -541,7 +725,7 @@ impl VTActor for TerminalState {
 /// screen.feed(b"Hello!");
 ///
 /// // Query the state
-/// assert_eq!(screen.cursor_position(), (4, 16)); // 0-indexed
+/// assert_eq!(screen.cursor_position(), (4, 15)); // 0-indexed (row 4, col 15)
 /// assert_eq!(screen.text_at(4, 9), Some('H'));
 /// assert!(screen.contains("Hello"));
 /// ```
@@ -735,6 +919,132 @@ impl ScreenState {
         (self.width, self.height)
     }
 
+    /// Returns the screen width in columns.
+    ///
+    /// This is a convenience method equivalent to `self.size().0`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ratatui_testlib::ScreenState;
+    ///
+    /// let screen = ScreenState::new(80, 24);
+    /// assert_eq!(screen.cols(), 80);
+    /// ```
+    pub fn cols(&self) -> u16 {
+        self.width
+    }
+
+    /// Returns the screen height in rows.
+    ///
+    /// This is a convenience method equivalent to `self.size().1`.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ratatui_testlib::ScreenState;
+    ///
+    /// let screen = ScreenState::new(80, 24);
+    /// assert_eq!(screen.rows(), 24);
+    /// ```
+    pub fn rows(&self) -> u16 {
+        self.height
+    }
+
+    /// Returns an iterator over all rows in the screen.
+    ///
+    /// Each item in the iterator is a reference to a row (a slice of cells).
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ratatui_testlib::ScreenState;
+    ///
+    /// let mut screen = ScreenState::new(80, 24);
+    /// screen.feed(b"Line 1\r\nLine 2");
+    ///
+    /// for (row_idx, row) in screen.iter_rows().enumerate() {
+    ///     println!("Row {}: {} cells", row_idx, row.len());
+    ///     for (col_idx, cell) in row.iter().enumerate() {
+    ///         if cell.c != ' ' {
+    ///             println!("  Cell ({}, {}): '{}'", row_idx, col_idx, cell.c);
+    ///         }
+    ///     }
+    /// }
+    /// ```
+    pub fn iter_rows(&self) -> impl Iterator<Item = &[Cell]> {
+        self.state.cells.iter().map(|row| row.as_slice())
+    }
+
+    /// Returns an iterator over all cells in a specific row.
+    ///
+    /// Returns `None` if the row index is out of bounds.
+    ///
+    /// # Arguments
+    ///
+    /// * `row` - Row index (0-based)
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ratatui_testlib::ScreenState;
+    ///
+    /// let mut screen = ScreenState::new(80, 24);
+    /// screen.feed(b"\x1b[31mRed\x1b[32mGreen\x1b[34mBlue");
+    ///
+    /// // Use the iterator immediately to avoid lifetime issues
+    /// let colored_cells: Vec<_> = screen.iter_row(0)
+    ///     .unwrap()
+    ///     .enumerate()
+    ///     .filter(|(_, cell)| cell.fg.is_some())
+    ///     .collect();
+    ///
+    /// assert!(colored_cells.len() >= 3, "Should have colored cells");
+    /// ```
+    pub fn iter_row(&self, row: u16) -> Option<impl Iterator<Item = &Cell>> {
+        if row < self.height {
+            Some(self.state.cells[row as usize].iter())
+        } else {
+            None
+        }
+    }
+
+    /// Returns a structured snapshot of the entire screen grid.
+    ///
+    /// This method provides a complete copy of the screen state suitable for
+    /// deep comparison with other terminal emulators or for serialization.
+    ///
+    /// # Returns
+    ///
+    /// A `GridSnapshot` containing:
+    /// - Grid dimensions (width, height)
+    /// - Complete cell data (2D vector of cells)
+    /// - Current cursor position
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ratatui_testlib::ScreenState;
+    ///
+    /// let mut screen = ScreenState::new(80, 24);
+    /// screen.feed(b"\x1b[31mHello");
+    ///
+    /// let snapshot = screen.snapshot();
+    /// assert_eq!(snapshot.width, 80);
+    /// assert_eq!(snapshot.height, 24);
+    /// assert_eq!(snapshot.cells[0][0].c, 'H');
+    /// assert_eq!(snapshot.cells[0][0].fg, Some(1)); // Red
+    /// assert_eq!(snapshot.cursor, (0, 5));
+    /// ```
+    pub fn snapshot(&self) -> GridSnapshot {
+        GridSnapshot {
+            width: self.width,
+            height: self.height,
+            cells: self.state.cells.clone(),
+            cursor: self.state.cursor_pos,
+        }
+    }
+
     /// Returns all Sixel graphics regions currently on screen.
     ///
     /// This method provides access to all Sixel graphics that have been rendered
@@ -787,9 +1097,15 @@ impl ScreenState {
     /// use ratatui_testlib::ScreenState;
     ///
     /// let mut screen = ScreenState::new(80, 24);
-    /// // ... render Sixel at position (5, 10) ...
     ///
-    /// assert!(screen.has_sixel_at(5, 10));
+    /// // Render a Sixel at position (5, 10) - ESC[5;10H moves to row 5, col 10 (1-based)
+    /// screen.feed(b"\x1b[5;10H");           // Move cursor
+    /// screen.feed(b"\x1bPq");                // Start Sixel
+    /// screen.feed(b"\"1;1;100;50#0~");       // Raster + data
+    /// screen.feed(b"\x1b\\");                // End Sixel
+    ///
+    /// // Check for Sixel at 0-based coordinates (4, 9)
+    /// assert!(screen.has_sixel_at(4, 9));
     /// assert!(!screen.has_sixel_at(0, 0));
     /// ```
     pub fn has_sixel_at(&self, row: u16, col: u16) -> bool {

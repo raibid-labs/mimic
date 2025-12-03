@@ -16,6 +16,8 @@
 //!
 //! ## Quick Start
 //!
+//! ### PTY-Based Testing (Full TUI Applications)
+//!
 //! ```rust,no_run
 //! use ratatui_testlib::{TuiTestHarness, Result};
 //! use portable_pty::CommandBuilder;
@@ -42,6 +44,29 @@
 //!     assert!(contents.contains("hello"));
 //!
 //!     Ok(())
+//! }
+//! ```
+//!
+//! ### Stream-Based Parsing (Headless/Oracle Mode)
+//!
+//! For testing terminal emulators or parsing raw escape sequences without PTY overhead:
+//!
+//! ```rust
+//! use ratatui_testlib::ScreenState;
+//!
+//! #[test]
+//! fn test_ansi_sequence_parsing() {
+//!     // Create parser without PTY
+//!     let mut screen = ScreenState::new(80, 24);
+//!
+//!     // Feed raw byte sequence
+//!     let input = b"\x1b[31mHello\x1b[0m";
+//!     screen.feed(input);
+//!
+//!     // Verify parsed state
+//!     assert!(screen.contains("Hello"));
+//!     assert_eq!(screen.get_cell(0, 0).unwrap().fg, Some(1)); // Red
+//!     assert_eq!(screen.cursor_position(), (0, 5));
 //! }
 //! ```
 //!
@@ -78,7 +103,24 @@
 //! - `ratatui-helpers`: Enable Ratatui-specific test helpers
 //! - `sixel`: Enable Sixel graphics position tracking and testing
 //! - `snapshot-insta`: Enable snapshot testing with `insta`
+//! - `headless`: Enable headless mode for CI/CD (no display server required)
 //! - `mvp`: Enable all MVP features (recommended for dgx-pixels)
+//!
+//! ### Headless Mode for CI/CD
+//!
+//! The `headless` feature flag configures the library to run without any display
+//! server dependencies, making it ideal for CI/CD environments:
+//!
+//! ```bash
+//! # Run tests in CI without X11/Wayland
+//! cargo test --features bevy,headless
+//!
+//! # Works in Docker containers
+//! docker run --rm rust:latest cargo test --features bevy,headless
+//! ```
+//!
+//! In headless mode, the Bevy integration uses `MinimalPlugins` instead of
+//! `DefaultPlugins`, eliminating all graphics and windowing dependencies.
 //!
 //! ## Architecture
 //!
@@ -124,15 +166,35 @@ pub mod bevy;
 // Public API exports
 pub use error::{Result, TermTestError};
 pub use events::{KeyCode, KeyEvent, Modifiers};
-pub use harness::TuiTestHarness;
+pub use harness::{Axis, TuiTestHarness};
 pub use pty::TestTerminal;
-pub use screen::{Cell, ScreenState, SixelRegion};
+pub use screen::{Cell, GridSnapshot, Rect, ScreenState, SixelRegion};
+
+/// Re-export of [`ScreenState`] for clarity in stream-based parsing contexts.
+///
+/// This is provided as a convenience for users who want to emphasize that they're
+/// using the library in headless/stream-based mode rather than PTY mode.
+///
+/// # Example
+///
+/// ```rust
+/// // Both of these are equivalent:
+/// use ratatui_testlib::ScreenState;
+/// use ratatui_testlib::Parser; // Clearer name for stream-based usage
+///
+/// let mut screen = ScreenState::new(80, 24);
+/// let mut parser = Parser::new(80, 24);
+/// ```
+pub type Parser = ScreenState;
 
 #[cfg(feature = "sixel")]
 pub use sixel::{SixelCapture, SixelSequence};
 
 #[cfg(feature = "bevy")]
-pub use bevy::BevyTuiTestHarness;
+pub use bevy::{BevyTuiTestHarness, HeadlessBevyRunner};
+
+#[cfg(all(feature = "bevy", feature = "snapshot-insta"))]
+pub use bevy::ComponentSnapshot;
 
 // Re-export commonly used types for convenience
 pub use portable_pty::CommandBuilder;
