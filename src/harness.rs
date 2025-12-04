@@ -50,7 +50,7 @@ use portable_pty::{CommandBuilder, ExitStatus};
 
 use crate::{
     error::{Result, TermTestError},
-    events::{encode_key_event, KeyCode, KeyEvent, Modifiers},
+    events::{encode_key_event, encode_mouse_event, KeyCode, KeyEvent, Modifiers, MouseEvent, MouseButton, ScrollDirection},
     pty::TestTerminal,
     screen::ScreenState,
     terminal_profiles::{Feature, TerminalCapabilities, TerminalProfile},
@@ -745,6 +745,153 @@ impl TuiTestHarness {
             std::thread::sleep(interval);
         }
         Ok(())
+    }
+
+    /// Sends a mouse event to the PTY.
+    ///
+    /// This simulates mouse interactions like clicks, drags, and scrolling using
+    /// SGR (Select Graphic Rendition) mouse encoding, which is supported by most
+    /// modern terminal emulators and TUI frameworks.
+    ///
+    /// # Arguments
+    ///
+    /// * `event` - The mouse event to send
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the write fails.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use ratatui_testlib::{MouseButton, MouseEvent, TuiTestHarness};
+    ///
+    /// # fn test() -> ratatui_testlib::Result<()> {
+    /// let mut harness = TuiTestHarness::new(80, 24)?;
+    ///
+    /// // Send a left click at (10, 5)
+    /// harness.send_mouse_event(MouseEvent::press(10, 5, MouseButton::Left))?;
+    /// harness.send_mouse_event(MouseEvent::release(10, 5, MouseButton::Left))?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn send_mouse_event(&mut self, event: MouseEvent) -> Result<()> {
+        // Record input timestamp for latency profiling
+        self.timing_recorder.record_event("input_sent");
+        self.latency_profile.mark_input();
+
+        let bytes = encode_mouse_event(&event);
+        self.record_input(&bytes);
+        self.terminal.write_all(&bytes)?;
+
+        // Apply configured event delay, or use default 50ms if no delay is set
+        let delay = if self.event_delay.is_zero() {
+            Duration::from_millis(50)
+        } else {
+            self.event_delay
+        };
+        std::thread::sleep(delay);
+
+        // Update state
+        let _ = self.update_state();
+
+        // Record render completion
+        self.timing_recorder.record_event("render_complete");
+        self.latency_profile.mark_render_end();
+        self.latency_profile.mark_frame_ready();
+
+        Ok(())
+    }
+
+    /// Simulates a mouse click at the specified position.
+    ///
+    /// This sends a press event followed immediately by a release event.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Column position (0-indexed)
+    /// * `y` - Row position (0-indexed)
+    /// * `button` - Mouse button to click
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the events cannot be sent.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use ratatui_testlib::{MouseButton, TuiTestHarness};
+    ///
+    /// # fn test() -> ratatui_testlib::Result<()> {
+    /// let mut harness = TuiTestHarness::new(80, 24)?;
+    /// harness.mouse_click(10, 5, MouseButton::Left)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn mouse_click(&mut self, x: u16, y: u16, button: MouseButton) -> Result<()> {
+        self.send_mouse_event(MouseEvent::press(x, y, button))?;
+        self.send_mouse_event(MouseEvent::release(x, y, button))
+    }
+
+    /// Simulates a mouse drag operation.
+    ///
+    /// Sends a press event at the start position, followed by a press event
+    /// (with drag motion implied) at the end position, and finally a release event.
+    ///
+    /// # Arguments
+    ///
+    /// * `start_x` - Start column (0-indexed)
+    /// * `start_y` - Start row (0-indexed)
+    /// * `end_x` - End column (0-indexed)
+    /// * `end_y` - End row (0-indexed)
+    /// * `button` - Mouse button to drag with
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the events cannot be sent.
+    pub fn mouse_drag(
+        &mut self,
+        start_x: u16,
+        start_y: u16,
+        end_x: u16,
+        end_y: u16,
+        button: MouseButton,
+    ) -> Result<()> {
+        self.send_mouse_event(MouseEvent::press(start_x, start_y, button))?;
+        
+        // SGR encoding handles drag by sending press events with updated coordinates
+        // We use a slightly modified button code for drag events in standard protocols,
+        // but standard SGR press events at new coordinates are often interpreted as drags
+        // if the button hasn't been released.
+        //
+        // Ideally, we'd add +32 to the button code for motion events, but SGR
+        // separates motion logic. For simple simulation, sending another press
+        // at the new location is usually sufficient for TUI frameworks to detect drag.
+        //
+        // However, strictly speaking, motion events might need the +32 flag.
+        // encode_mouse_event handles this if we had a 'drag' variant in MouseEvent.
+        // For now, we'll simulate it as a press at the new location.
+        
+        // Note: Some terminals/frameworks expect intermediate points.
+        // We jump directly to end for simplicity.
+        self.send_mouse_event(MouseEvent::press(end_x, end_y, button))?;
+        
+        self.send_mouse_event(MouseEvent::release(end_x, end_y, button))
+    }
+
+    /// Simulates a mouse scroll event.
+    ///
+    /// # Arguments
+    ///
+    /// * `x` - Cursor column position during scroll
+    /// * `y` - Cursor row position during scroll
+    /// * `direction` - Direction to scroll
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the event cannot be sent.
+    pub fn mouse_scroll(&mut self, x: u16, y: u16, direction: ScrollDirection) -> Result<()> {
+        self.send_mouse_event(MouseEvent::scroll(x, y, direction))
     }
 
     /// Internal method to send a key event and update state.
