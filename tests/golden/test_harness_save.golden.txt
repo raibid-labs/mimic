@@ -1,9 +1,9 @@
 --- GOLDEN FILE ---
-test: test_update_env
+test: test_harness_save
 size: 80x24
 timestamp: 2025-12-05T07:10:06Z
 --- CONTENT ---
-Original                                                                        
+Harness test content                                                            
                                                                                 
                                                                                 
                                                                                 

@@ -40,6 +40,7 @@ use crate::{
     events::{KeyCode, Modifiers, MouseEvent, ScrollDirection, MouseButton},
     screen::ScreenState,
     TuiTestHarness,
+    navigation::{NavigationTestExt, HintLabel},
 };
 
 /// Result of a wait operation.
@@ -79,6 +80,12 @@ impl AsyncTuiTestHarness {
         Ok(Self {
             inner: Arc::new(Mutex::new(harness)),
         })
+    }
+
+    /// Get visible hints asynchronously.
+    pub async fn visible_hints(&self) -> Vec<HintLabel> {
+        let inner = self.inner.clone();
+        spawn_blocking(move || inner.lock().unwrap().visible_hints()).await.unwrap()
     }
 
     /// Spawns a process in the PTY.
