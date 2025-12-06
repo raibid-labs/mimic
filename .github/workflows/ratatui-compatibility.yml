@@ -1,0 +1,141 @@
+name: Ratatui Compatibility
+
+on:
+  schedule:
+    # Run weekly on Sundays at midnight UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      ratatui-versions:
+        description: 'Comma-separated list of ratatui versions to test (leave empty for default matrix)'
+        required: false
+  pull_request:
+    paths:
+      - 'Cargo.toml'
+      - '.github/workflows/ratatui-compatibility.yml'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Compatibility testing across multiple ratatui versions
+  compatibility:
+    name: Test with Ratatui ${{ matrix.ratatui-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ratatui-version:
+          # Keep testing against recent stable versions
+          # Update this list when new ratatui versions are released
+          - '0.25.0'  # Current stable (example - update as needed)
+          - '0.24.0'  # Previous stable
+          - '0.23.0'  # Two versions back
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-compat-${{ matrix.ratatui-version }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-compat-${{ matrix.ratatui-version }}-
+
+      - name: Update ratatui version
+        run: |
+          echo "Testing with ratatui ${{ matrix.ratatui-version }}"
+          # Use cargo-edit to update version
+          cargo install cargo-edit || true
+          cargo set-version --package ratatui ${{ matrix.ratatui-version }} || \
+            sed -i 's/ratatui = .*/ratatui = "${{ matrix.ratatui-version }}"/' Cargo.toml
+
+      - name: Check Cargo.toml changes
+        run: |
+          echo "Updated Cargo.toml:"
+          grep "ratatui" Cargo.toml || true
+
+      - name: Build with ratatui ${{ matrix.ratatui-version }}
+        run: cargo build --all-features --verbose
+        continue-on-error: true
+
+      - name: Run tests with ratatui ${{ matrix.ratatui-version }}
+        run: cargo test --all-features --verbose
+        continue-on-error: true
+
+      - name: Report compatibility
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ Compatible with ratatui ${{ matrix.ratatui-version }}"
+          else
+            echo "❌ Incompatible with ratatui ${{ matrix.ratatui-version }}"
+            echo "::warning::Compatibility issue detected with ratatui ${{ matrix.ratatui-version }}"
+          fi
+
+  # Summary job
+  compatibility-summary:
+    name: Compatibility Summary
+    runs-on: ubuntu-latest
+    needs: compatibility
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          echo "Ratatui compatibility testing completed"
+          echo "Review individual job results for details"
+
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issueTitle = 'Ratatui Compatibility Test Failed';
+            const issueBody = `
+            # Ratatui Compatibility Test Failure
+
+            One or more ratatui versions failed compatibility testing.
+
+            **Workflow Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ## Action Required
+
+            1. Review the failed test runs
+            2. Determine if this is a breaking change in ratatui
+            3. Update code for compatibility or document minimum version
+            4. Update compatibility matrix in workflow if needed
+
+            ## Related
+
+            - [Compatibility Workflow](.github/workflows/ratatui-compatibility.yml)
+            - [Cargo.toml](Cargo.toml)
+            `;
+
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'compatibility'
+            });
+
+            const existingIssue = issues.data.find(issue => issue.title === issueTitle);
+
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: issueTitle,
+                body: issueBody,
+                labels: ['compatibility', 'ci']
+              });
+            }

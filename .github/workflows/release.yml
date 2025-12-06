@@ -45,9 +45,26 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          echo "# Changelog" > RELEASE_NOTES.md
+          echo "# Release ${{ steps.get_version.outputs.version }}" > RELEASE_NOTES.md
           echo "" >> RELEASE_NOTES.md
-          git log --pretty=format:"- %s (%an)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> RELEASE_NOTES.md || echo "Initial release" >> RELEASE_NOTES.md
+          echo "## Artifacts" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "- **Crate**: Published to [crates.io/crates/ratatui-testlib](https://crates.io/crates/ratatui-testlib)" >> RELEASE_NOTES.md
+          echo "- **Documentation**: Available at [docs.rs/ratatui-testlib](https://docs.rs/ratatui-testlib)" >> RELEASE_NOTES.md
+          echo "- **GitHub Pages**: API docs deployed to GitHub Pages" >> RELEASE_NOTES.md
+          echo "- **Examples**: See [examples/](https://github.com/raibid-labs/ratatui-testlib/tree/${{ steps.get_version.outputs.version }}/examples)" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "## Changes" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          git log --pretty=format:"- %s (%an)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> RELEASE_NOTES.md 2>/dev/null || echo "Initial release" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "## Installation" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo '```toml' >> RELEASE_NOTES.md
+          echo '[dev-dependencies]' >> RELEASE_NOTES.md
+          echo "ratatui-testlib = \"${GITHUB_REF#refs/tags/v}\"" >> RELEASE_NOTES.md
+          echo '```' >> RELEASE_NOTES.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
